@@ -1,0 +1,24 @@
+{% extends 'base_admin.html' %}
+{% load static %}
+{% block title %}Trabajadores{% endblock %}
+{% block page_title %}Listado de Trabajadores{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/trabajadores_admin.css' %}">
+
+<div class="tabla-wrap">
+  <table class="tabla-trabajadores">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Especialidad</th>
+        <th>direccion</th>
+        <th>Verificado</th>
+      </tr>
+    </thead>
+    <tbody id="trabajadores-body"></tbody>
+  </table>
+</div>
+
+<script src="{% static 'js/trabajadores_admin.js' %}"></script>
+{% endblock %}

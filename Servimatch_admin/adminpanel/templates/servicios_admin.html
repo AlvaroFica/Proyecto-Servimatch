@@ -1,0 +1,81 @@
+{% extends 'base_admin.html' %}
+{% block title %}Servicios{% endblock %}
+{% block page_title %}Servicios{% endblock %}
+{% block content %}
+<style>
+  .servicios-container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 1rem;
+  }
+  .servicios-container form {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+  .servicios-container form select,
+  .servicios-container form button {
+    padding: 0.5rem;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+  }
+  .servicios-container table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    overflow: hidden;
+  }
+  .servicios-container th,
+  .servicios-container td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #eee;
+    text-align: left;
+  }
+  .servicios-container th {
+    background: #f3ebff;
+    color: #4b3c91;
+    font-weight: 600;
+  }
+</style>
+<div class="servicios-container">
+  <form method="get">
+    <label>Tipo</label>
+    <select name="tipo">
+      <option value="">--Todos--</option>
+      {% for t in tipos %}
+        <option value="{{ t.id }}" {% if tipo_seleccionado == t.id|stringformat:"s" %}selected{% endif %}>{{ t.nombre_tipo }}</option>
+      {% endfor %}
+    </select>
+    <label>Comuna</label>
+    <select name="comuna">
+      <option value="">--Todas--</option>
+      {% for c in comunas %}
+        <option value="{{ c.id }}" {% if comuna_seleccionada == c.id|stringformat:"s" %}selected{% endif %}>{{ c.nombre_comuna }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit">Filtrar</button>
+  </form>
+  <table>
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Tipo</th>
+        <th>#Trabajadores</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in servicios %}
+        <tr>
+          <td>{{ s.nombre_serv }}</td>
+          <td>{{ s.tipo }}</td>
+          <td>{{ s.trabajadores|length }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends 'base_admin.html' %}
+{% block title %}Boletas{% endblock %}
+{% block page_title %}Boletas{% endblock %}
+{% block content %}
+  <form method="get" style="margin-bottom:1rem">
+    <label>Desde</label><input type="date" name="desde" value="{{ desde }}">
+    <label>Hasta</label><input type="date" name="hasta" value="{{ hasta }}">
+    <button type="submit">Filtrar</button>
+  </form>
+  <table style="width:100%;border-collapse:collapse">
+    <thead><tr>
+      <th style="padding:.5rem;border-bottom:1px solid #ccc">Usuario</th>
+      <th style="padding:.5rem;border-bottom:1px solid #ccc">Monto</th>
+      <th style="padding:.5rem;border-bottom:1px solid #ccc">Pago</th>
+      <th style="padding:.5rem;border-bottom:1px solid #ccc">Fecha</th>
+    </tr></thead>
+    <tbody>
+      {% for b in boletas %}
+        <tr>
+          <td style="padding:.5rem;border-bottom:1px solid #eee">{{ b.usuario }}</td>
+          <td style="padding:.5rem;border-bottom:1px solid #eee">${{ b.monto }}</td>
+          <td style="padding:.5rem;border-bottom:1px solid #eee">{{ b.tipo_pago }}</td>
+          <td style="padding:.5rem;border-bottom:1px solid #eee">{{ b.fecha_creacion|default:"" }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends 'base_admin.html' %}
+{% block title %}Últimas 20 Acciones{% endblock %}
+{% block page_title %}Últimas 20 Acciones{% endblock %}
+
+{% block content %}
+<style>
+  body {
+    background: #f3ebff;
+  }
+
+  .log-wrapper {
+    width: 90%;
+    max-width: 1200px;
+    margin: 3rem auto;
+  }
+
+  .card-log {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    overflow-x: auto;
+  }
+
+  .log-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 800px;
+  }
+
+  .log-table th,
+  .log-table td {
+    padding: 1rem;
+    text-align: left;
+    font-size: 0.95rem;
+    border-bottom: 1px solid #eee;
+  }
+
+  .log-table th {
+    background: #e1d8ff;
+    font-weight: 600;
+    color: #4b3c91;
+  }
+
+  .log-table td {
+    color: #333;
+  }
+
+  .log-table tr:nth-child(even) td {
+    background: #faf7ff;
+  }
+
+  @media (max-width: 768px) {
+    .log-table th,
+    .log-table td {
+      padding: 0.7rem;
+      font-size: 0.85rem;
+    }
+  }
+</style>
+
+<div class="log-wrapper">
+  <div class="card-log">
+    <table class="log-table">
+      <thead>
+        <tr>
+          <th>Hora</th>
+          <th>Usuario</th>
+          <th>Modelo</th>
+          <th>Detalle</th>
+          <th>Acción</th>
+          <th>ID</th>
+        </tr>
+      </thead>
+      <tbody id="auditLogs">
+        <!-- generado por JS -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  fetch('http://127.0.0.1:8000/api/monitor/logs/')
+    .then(r => r.json())
+    .then(logs => {
+      const tbody = document.getElementById('auditLogs');
+      logs.forEach(l => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${new Date(l.timestamp).toLocaleString()}</td>
+          <td>${l.usuario}</td>
+          <td>${l.modelo}</td>
+          <td>${l.detalle}</td>
+          <td>${l.accion}</td>
+          <td>${l.objeto_id}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    });
+</script>
+{% endblock %}

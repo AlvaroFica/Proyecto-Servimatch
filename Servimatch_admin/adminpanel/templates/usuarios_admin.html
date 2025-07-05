@@ -1,0 +1,31 @@
+{% extends 'base_admin.html' %}
+{% block title %}Usuarios{% endblock %}
+{% load static %}
+{% block page_title %}Listado de Usuarios{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/usuarios_admin.css' %}">
+
+<div style="margin-bottom: 1.5rem;">
+  <button onclick="location.href='{% url 'admin_reportes_clientes' %}'" class="btn-reportes">
+    📋 Reportes de Clientes
+    <span id="comentarios-count" class="badge" style="display:none">0</span>
+  </button>
+</div>
+
+<div class="usuarios-wrap">
+  <table class="tabla-usuarios">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nombre</th>
+        <th>Correo</th>
+        <th>Comuna</th>
+      </tr>
+    </thead>
+    <tbody id="usuarios-body"></tbody>
+  </table>
+</div>
+
+<script src="{% static 'js/usuarios_admin.js' %}"></script>
+{% endblock %}

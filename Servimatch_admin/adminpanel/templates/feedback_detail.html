@@ -1,0 +1,11 @@
+{% extends 'base_admin.html' %}
+{% block title %}Detalle Mensaje{% endblock %}
+{% block page_title %}Detalle Mensaje{% endblock %}
+{% block content %}
+<p><strong>{{ role }}</strong> – {{ user.nombre }} {{ user.apellido }} – {{ user.rut }}</p>
+{% if user.foto_perfil %}
+  <img src="{{ user.foto_perfil }}" style="width:100px;height:100px;border-radius:50%;object-fit:cover">
+{% endif %}
+<h3>Mensaje completo</h3>
+<p>{{ feedback.mensaje }}</p>
+{% endblock %}

@@ -1,0 +1,75 @@
+.filtros {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.filtros label {
+  font-weight: 600;
+  color: #4b3c91;
+}
+
+.filtros select {
+  padding: 0.5rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.filtros button {
+  padding: 0.5rem 1rem;
+  background: #4b3c91;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.tabla-wrap {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  overflow-x: auto;
+}
+
+.tabla-trabajadores {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px;
+}
+
+.tabla-trabajadores th, .tabla-trabajadores td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.tabla-trabajadores th {
+  background: #e1d8ff;
+  color: #4b3c91;
+  font-weight: 600;
+}
+
+.tabla-trabajadores td {
+  color: #333;
+}
+
+.tabla-trabajadores tr:nth-child(even) td {
+  background: #faf7ff;
+}
+
+.btn-ver {
+  background: #4b3c91;
+  color: white;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.btn-ver:hover {
+  background: #6a56bd;
+}

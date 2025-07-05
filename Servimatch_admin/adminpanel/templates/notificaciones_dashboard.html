@@ -1,0 +1,143 @@
+{% extends 'base_admin.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block content %}
+<style>
+  body {
+    background: #f4f7fc;
+  }
+
+  .notificaciones-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 4rem;
+  }
+
+  .notificaciones-iconos {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .icono-notificacion {
+    cursor: pointer;
+    text-align: center;
+  }
+
+  .icono-notificacion img {
+    width: 48px;
+    height: 48px;
+    transition: transform 0.2s ease;
+  }
+
+  .icono-notificacion:hover img {
+    transform: scale(1.2);
+  }
+
+  .icono-notificacion span {
+    display: block;
+    font-size: .8rem;
+    margin-top: .3rem;
+    color: #444;
+  }
+
+  .contenido-notificaciones {
+    background: #fff;
+    padding: 2rem;
+    border-radius: 18px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    border: 2px solid #ccc;
+    max-width: 700px;
+    width: 90%;
+    display: none;
+  }
+
+  .contenido-notificaciones.active {
+    display: block;
+  }
+
+  .contenido-notificaciones h3 {
+    color: #4b3c91;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+
+  .contenido-notificaciones ul {
+    list-style: none;
+    padding: 0;
+    color: #333;
+  }
+
+  .contenido-notificaciones li {
+    margin-bottom: .8rem;
+    padding: .6rem 1rem;
+    border-radius: 12px;
+    background: #f8f8ff;
+    border: 1px solid #ddd;
+  }
+</style>
+
+<div class="notificaciones-wrapper">
+  <div class="notificaciones-iconos">
+    <div class="icono-notificacion" onclick="toggleNotificaciones('clientes')">
+      <img src="/static/icons/usuarios_icon.png">
+      <span>Clientes</span>
+    </div>
+    <div class="icono-notificacion" onclick="toggleNotificaciones('pagos')">
+      <img src="/static/icons/boleta_icon.png">
+      <span>Pagos</span>
+    </div>
+  </div>
+
+  <div id="notificaciones-clientes" class="contenido-notificaciones">
+    <h3>Reclamos de Clientes</h3>
+    <ul id="listaReclamosClientes"><li>Cargando...</li></ul>
+  </div>
+
+  <div id="notificaciones-pagos" class="contenido-notificaciones">
+    <h3>Problemas de Pagos</h3>
+    <ul id="listaReclamosPagos"><li>Cargando...</li></ul>
+  </div>
+</div>
+
+<script>
+  function toggleNotificaciones(tipo) {
+    document.querySelectorAll('.contenido-notificaciones').forEach(c => c.classList.remove('active'));
+    document.getElementById('notificaciones-' + tipo).classList.add('active');
+  }
+
+  async function cargarFeedback(tipo, destino) {
+    try {
+      let r = await fetch('http://127.0.0.1:8000/api/feedback/');
+      let data = await r.json();
+      let contenedor = document.getElementById(destino);
+      contenedor.innerHTML = '';
+
+      const filtrados = data.filter(f => {
+        if (!f.respuesta || f.respuesta.trim() === '') {
+          const isCliente = f.usuario && !f.usuario.trabajador;
+          return (tipo === 'cliente' && isCliente) || (tipo === 'pago' && !isCliente);
+        }
+        return false;
+      });
+
+      if (filtrados.length === 0) {
+        contenedor.innerHTML = '<li>No hay reclamos pendientes.</li>';
+      } else {
+        filtrados.forEach(fb => {
+          const li = document.createElement('li');
+          li.textContent = `${fb.usuario ? fb.usuario.nombre + ' ' + fb.usuario.apellido : 'Anónimo'} – ${fb.mensaje}`;
+          contenedor.appendChild(li);
+        });
+      }
+    } catch {
+      document.getElementById(destino).innerHTML = '<li>Error al cargar feedback.</li>';
+    }
+  }
+
+  cargarFeedback('cliente', 'listaReclamosClientes');
+  cargarFeedback('pago', 'listaReclamosPagos');
+</script>
+
+{% endblock %}

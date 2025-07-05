@@ -1,0 +1,70 @@
+{% extends 'base_admin.html' %}
+{% block title %}Estadísticas{% endblock %}
+{% block page_title %}Estadísticas Globales{% endblock %}
+{% block content %}
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 2rem; max-width: 1400px; margin: 2rem auto;">
+
+  <div style="background: #fff; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+    <h3 style="margin-bottom: 1rem; color: #4b3c91;">Feedback por Tipo</h3>
+    <canvas id="grafFeedback"></canvas>
+  </div>
+
+  <div style="background: #fff; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+    <h3 style="margin-bottom: 1rem; color: #4b3c91;">Estado de Boletas</h3>
+    <canvas id="grafBoletas"></canvas>
+  </div>
+
+  <div style="background: #fff; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+    <h3 style="margin-bottom: 1rem; color: #4b3c91;">Servicios Populares</h3>
+    <canvas id="grafServicios"></canvas>
+  </div>
+
+</div>
+
+<script>
+function renderChart(id, type, url, label, bgList = []) {
+  fetch(url).then(r => r.json()).then(data => {
+    new Chart(document.getElementById(id), {
+      type: type,
+      data: {
+        labels: data.labels,
+        datasets: [{
+          label: label,
+          data: data.cantidades,
+          backgroundColor: bgList.length ? bgList : 'rgba(75, 60, 145, 0.7)',
+          borderRadius: type === 'bar' ? 10 : 0
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: true, position: 'bottom' },
+          title: {
+            display: true,
+            text: label,
+            color: '#333',
+            font: { size: 18 }
+          }
+        },
+        scales: type === 'bar' ? {
+          y: {
+            beginAtZero: true,
+            ticks: { stepSize: 1, color: '#555' },
+            grid: { color: '#eee' }
+          },
+          x: {
+            ticks: { color: '#555', maxRotation: 0, minRotation: 0 },
+            grid: { display: false }
+          }
+        } : {}
+      }
+    });
+  });
+}
+
+renderChart('grafFeedback', 'bar', '/graficos/feedback-tipo/', 'Cantidad');
+renderChart('grafBoletas', 'doughnut', '/graficos/boletas-por-estado/', 'Estado');
+
+renderChart('grafServicios', 'bar', '/graficos/servicios-populares/', 'Servicios');
+</script>
+{% endblock %}

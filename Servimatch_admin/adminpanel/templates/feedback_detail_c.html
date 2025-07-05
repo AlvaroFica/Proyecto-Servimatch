@@ -1,0 +1,67 @@
+{% extends 'base_admin.html' %}
+{% block title %}Feedback Pendientes{% endblock %}
+{% block page_title %}Feedback sin responder{% endblock %}
+{% block content %}
+
+<style>
+  .tabla-feedback {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  }
+  .tabla-feedback th,
+  .tabla-feedback td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+  }
+  .tabla-feedback th {
+    background: #f0f4ff;
+    font-weight: 600;
+    color: #333;
+  }
+  .tabla-feedback tr:hover {
+    background: #f9fbff;
+  }
+  .btn-ver {
+    background: #4b3c91;
+    color: white;
+    padding: 0.4rem 0.8rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: background 0.2s;
+  }
+  .btn-ver:hover {
+    background: #6f5ab7;
+  }
+</style>
+
+<table class="tabla-feedback">
+  <thead>
+    <tr>
+      <th>Usuario</th>
+      <th>Título</th>
+      <th>Mensaje</th>
+      <th>Fecha</th>
+      <th>Acción</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for f in feedbacks %}
+    <tr>
+      <td>{{ f.usuario.nombre }} {{ f.usuario.apellido }}</td>
+      <td>{{ f.titulo }}</td>
+      <td>{{ f.mensaje|truncatechars:60 }}</td>
+      <td>{{ f.creado|date:"Y-m-d H:i" }}</td>
+      <td><a href="{% url 'admin_feedback_detail' f.id %}" class="btn-ver">Responder</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}

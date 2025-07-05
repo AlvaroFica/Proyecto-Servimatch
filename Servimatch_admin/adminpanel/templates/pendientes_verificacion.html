@@ -1,0 +1,83 @@
+{% extends 'base_admin.html' %}
+{% block title %}Pendientes{% endblock %}
+{% block page_title %}Pendientes Verificar{% endblock %}
+{% block content %}
+<style>
+  .pendientes-container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 1rem;
+  }
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+  }
+  .card {
+    background: #fff;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    text-align: center;
+  }
+  .card img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 8px;
+  }
+  .card button {
+    margin: 0.5rem;
+    padding: 0.6rem 1rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .btn-verificar {
+    background: #27ae60;
+    color: #fff;
+  }
+  .btn-rechazar {
+    background: #c0392b;
+    color: #fff;
+  }
+</style>
+<div class="pendientes-container">
+  <div class="card-grid">
+    {% for t in trabajadores %}
+      <div class="card">
+        <h3>{{ t.usuario.nombre }} {{ t.usuario.apellido }}</h3>
+        <div style="display:flex;justify-content:center;gap:1rem;margin:1rem 0">
+          <div>
+            <small>Cédula Frente</small><br>
+            <img src="{{ t.foto_cedula }}">
+          </div>
+          <div>
+            <small>Cédula Dorso</small><br>
+            <img src="{{ t.foto_cedula_atras }}">
+          </div>
+          <div>
+            <small>Selfie</small><br>
+            <img src="{{ t.foto_autoretrato }}">
+          </div>
+        </div>
+        <button class="btn-verificar" onclick="patch({{ t.id }},true)">✅ Verificar</button>
+        <button class="btn-rechazar" onclick="patch({{ t.id }},false)">❌ Rechazar</button>
+      </div>
+    {% empty %}
+      <p>No hay pendientes.</p>
+    {% endfor %}
+  </div>
+</div>
+<script>
+  async function patch(id, ver) {
+    const r = await fetch(`http://127.0.0.1:8000/api/trabajadores/${id}/`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ estado_verificado: ver })
+    });
+    if (r.ok) location.reload();
+  }
+</script>
+{% endblock %}

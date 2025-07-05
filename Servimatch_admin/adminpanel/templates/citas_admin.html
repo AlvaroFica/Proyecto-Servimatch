@@ -1,0 +1,176 @@
+{% extends 'base_admin.html' %}
+{% block title %}Historial de Citas{% endblock %}
+{% block page_title %}Historial de Citas{% endblock %}
+
+{% block content %}
+<style>
+  body {
+    background: #f3ebff;
+  }
+
+  .wrapper-citas {
+    width: 90%;
+    max-width: 1200px;
+    margin: 3rem auto;
+  }
+
+  .card-citas {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    overflow-x: auto;
+  }
+
+  .tabla-citas {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 800px;
+  }
+
+  .tabla-citas th, .tabla-citas td {
+    padding: 1rem;
+    text-align: left;
+    font-size: 0.95rem;
+    border-bottom: 1px solid #eee;
+  }
+
+  .tabla-citas th {
+    background: #e1d8ff;
+    font-weight: 600;
+    color: #4b3c91;
+  }
+
+  .tabla-citas td {
+    color: #333;
+  }
+
+  .tabla-citas tr:nth-child(even) td {
+    background: #faf7ff;
+  }
+
+  .styled-btn {
+    padding: 0.4rem 0.8rem;
+    background: #4b3c91;
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    font-size: 0.85rem;
+  }
+
+  .styled-btn:hover {
+    background: #6a56bd;
+  }
+
+  #btn-marcar-todos {
+    display: block;
+    margin: 2rem auto 0;
+  }
+</style>
+
+<div class="wrapper-citas">
+  <div class="card-citas">
+    <table class="tabla-citas">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Usuario</th>
+          <th>Trabajador</th>
+          <th>Plan</th>
+          <th>Fecha</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in citas %}
+          <tr data-id="{{ c.id }}">
+            <td>{{ c.id }}</td>
+            <td>{{ c.usuario }}</td>
+            <td>{{ c.trabajador }}</td>
+            <td>{{ c.plan }}</td>
+            <td>{{ c.fecha }}</td>
+            <td class="estado">{{ c.estado }}</td>
+            <td>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="7" style="text-align:center;">No hay citas.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  const csrftoken = getCookie('csrftoken');
+
+  document.querySelectorAll('.toggle-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const tr = btn.closest('tr');
+      const citaId = tr.dataset.id;
+      const estadoTd = tr.querySelector('.estado');
+      const nuevoEstado = estadoTd.textContent.trim() === 'pendiente' ? 'completada' : 'pendiente';
+
+      const res = await fetch(`/admin/citas/${citaId}/toggle/`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify({ estado: nuevoEstado })
+      });
+      if (res.ok) {
+        estadoTd.textContent = nuevoEstado;
+        btn.textContent = nuevoEstado === 'pendiente' ? 'Marcar completada' : 'Reabrir';
+      } else {
+        alert('Error al actualizar el estado.');
+      }
+    });
+  });
+
+  document.getElementById('btn-marcar-todos').addEventListener('click', async () => {
+    const rows = document.querySelectorAll('tbody tr');
+    for (let tr of rows) {
+      const estadoTd = tr.querySelector('.estado');
+      const btn = tr.querySelector('.toggle-btn');
+      if (estadoTd && estadoTd.textContent.trim() === 'pendiente') {
+        const citaId = tr.dataset.id;
+        const res = await fetch(`/admin/citas/${citaId}/toggle/`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+          },
+          body: JSON.stringify({ estado: 'completada' })
+        });
+        if (res.ok) {
+          estadoTd.textContent = 'completada';
+          btn.textContent = 'Reabrir';
+        }
+      }
+    }
+    window.location.reload();
+  });
+</script>
+{% endblock %}

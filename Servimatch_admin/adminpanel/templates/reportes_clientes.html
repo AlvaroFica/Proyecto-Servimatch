@@ -1,0 +1,208 @@
+{% extends 'base_admin.html' %}
+{% block title %}Reportes de Clientes{% endblock %}
+{% block page_title %}Reportes de Clientes{% endblock %}
+
+{% block content %}
+<style>
+  .main-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+  }
+
+  .feedback-wrapper { flex: 1; }
+
+  .sidebar-panel {
+    width: 280px;
+    background: #f3ebff;
+    border-radius: 16px;
+    padding: 1.5rem;
+    color: #4b3c91;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+  }
+
+  .sidebar-panel h4 { margin-bottom: 1rem; font-size: 1.1rem; }
+
+  .sidebar-panel ul { list-style: none; padding: 0; margin: 0; }
+
+  .sidebar-panel li { margin-bottom: 0.75rem; font-size: 0.95rem; }
+
+  .sidebar-panel a {
+    color: #4b3c91;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .sidebar-panel a.active {
+    text-decoration: underline;
+  }
+
+  .card {
+    border-left: 5px solid #4b3c91;
+    background: #fff;
+    border-radius: 12px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  }
+
+  .top {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .top img {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+
+  .info {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.9rem;
+  }
+
+  .info a {
+    font-weight: bold;
+    color: #4b3c91;
+    text-decoration: none;
+    font-size: 0.95rem;
+  }
+
+  .info small {
+    color: #666;
+    font-size: 0.75rem;
+  }
+
+  .mensaje {
+    background: #f3ebff;
+    font-style: italic;
+    font-size: 0.9rem;
+    padding: 0.6rem 0.8rem;
+    border-radius: 8px;
+    margin-bottom: 0.6rem;
+    color: #333;
+  }
+
+  .responder {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .responder textarea {
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 0.5rem;
+    font-size: 0.85rem;
+    resize: vertical;
+  }
+
+  .responder button {
+    align-self: flex-start;
+    background: #4b3c91;
+    color: #fff;
+    border: none;
+    padding: 0.4rem 1rem;
+    border-radius: 16px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .responder button:hover {
+    background: #6a56bd;
+  }
+
+  .stat {
+    font-size: 0.8rem;
+    color: #444;
+    margin-left: 0.5rem;
+  }
+</style>
+
+<div class="main-content">
+  <div class="feedback-wrapper">
+    {% if data %}
+      {% for item in data %}
+        {% if not item.respuesta %}
+          <div id="card_{{ item.id }}" class="card">
+            <div class="top">
+              {% if item.foto %}
+                <img src="{{ item.foto }}">
+              {% endif %}
+              <div class="info">
+                <a href="{% url 'feedback_detail_c' item.id %}">{{ item.nombre }}</a>
+                <small>{{ item.role }} | RUT: {{ item.rut }}</small>
+              </div>
+            </div>
+            <div class="mensaje">{{ item.mensaje }}</div>
+            <div class="responder">
+              <textarea id="resp_{{ item.id }}" rows="2" placeholder="Tu respuesta..."></textarea>
+              <div>
+                <button onclick="send({{ item.id }})">Responder</button>
+                <span id="stat_{{ item.id }}" class="stat"></span>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+      {% endfor %}
+    {% else %}
+      <p>No hay reportes.</p>
+    {% endif %}
+  </div>
+
+  <aside class="sidebar-panel">
+    <h4>Estadísticas</h4>
+    <ul>
+      <li>Total: {{ data|length }}</li>
+      <li>Sin responder: {{ sin_responder }}</li>
+    </ul>
+    <h4>Filtrar por rol</h4>
+    <ul>
+      <li><a href="{% url 'admin_reportes_clientes' %}" class="{% if not rol_actual %}active{% endif %}">Todos</a></li>
+      <li><a href="{% url 'admin_reportes_clientes' %}?rol=Cliente" class="{% if rol_actual == 'Cliente' %}active{% endif %}">Clientes</a></li>
+      <li><a href="{% url 'admin_reportes_clientes' %}?rol=Trabajador" class="{% if rol_actual == 'Trabajador' %}active{% endif %}">Trabajadores</a></li>
+    </ul>
+  </aside>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const API_URL = "{{ API }}";
+
+  document.querySelector("#filtroRol")?.addEventListener("change", function () {
+    const rol = this.value;
+    const url = new URL(window.location.href);
+    if (rol) {
+      url.searchParams.set("rol", rol);
+    } else {
+      url.searchParams.delete("rol");
+    }
+    window.location.href = url.toString();
+  });
+
+function send(id){
+  const ta = document.getElementById(`resp_${id}`);
+  const st = document.getElementById(`stat_${id}`);
+  const txt = ta.value.trim();
+  if(!txt){st.textContent='vacío';return;}
+  fetch(`${API_URL}/feedback/${id}/respuesta/`, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({respuesta:txt})
+  })
+  .then(r => r.ok ? document.getElementById(`card_${id}`).remove() : Promise.reject())
+  .catch(_=>st.textContent='error');
+}
+</script>
+{% endblock %}

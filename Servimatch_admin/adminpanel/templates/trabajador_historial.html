@@ -1,0 +1,63 @@
+{% extends 'base_admin.html' %}
+{% block title %}Historial{% endblock %}
+{% block page_title %}Historial de Servicios{% endblock %}
+{% block content %}
+<style>
+  .card-historial {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  }
+
+  .card-historial h3 {
+    margin-bottom: 1rem;
+    color: #4b3c91;
+  }
+
+  .item-cita {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+  }
+
+  .item-cita strong {
+    color: #4b3c91;
+  }
+</style>
+
+<div class="card-historial">
+  <h3>Historial de Servicios</h3>
+  <div id="lista-citas">Cargando...</div>
+</div>
+
+<script>
+  const trabajadorId = {{ trabajador_id }};
+
+  fetch(`http://127.0.0.1:8000/api/trabajadores/${trabajadorId}/historial/`)
+    .then(res => res.json())
+    .then(data => {
+      const contenedor = document.getElementById('lista-citas');
+      if (data.length === 0) {
+        contenedor.innerHTML = 'No hay citas registradas.';
+        return;
+      }
+      contenedor.innerHTML = '';
+      data.forEach(cita => {
+        const item = document.createElement('div');
+        item.className = 'item-cita';
+        item.innerHTML = `
+          <div><strong>Cliente:</strong> ${cita.usuario_nombre}</div>
+          <div><strong>Fecha:</strong> ${cita.fecha}</div>
+          <div><strong>Descripción:</strong> ${cita.descripcion}</div>
+          <div><strong>Estado:</strong> ${cita.estado}</div>
+        `;
+        contenedor.appendChild(item);
+      });
+    })
+    .catch(() => {
+      document.getElementById('lista-citas').innerText = 'Error al cargar el historial.';
+    });
+</script>
+{% endblock %}
