@@ -1,2 +1,2 @@
 cd Servimatch_app
-npx expo start -c
+cmd /k "npx expo start -c"
