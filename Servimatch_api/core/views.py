@@ -612,8 +612,9 @@ class IniciarPagoFlowView(APIView):
 
             flow_data = response.json()
 
-            if 'url' in flow_data:
-                return Response({"url": flow_data["url"]})
+            if 'url' in flow_data and 'token' in flow_data:
+                flow_url = f"{flow_data['url']}?token={flow_data['token']}"
+                return Response({"url": flow_url})
             else:
                 return Response({"error": flow_data.get("message", "Error en Flow")}, status=500)
 
