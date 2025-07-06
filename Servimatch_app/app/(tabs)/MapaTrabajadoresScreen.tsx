@@ -2,6 +2,7 @@
 import BannerRotativo from '../../components/BannerRotativo';
 import BuscadorProfesional from '../../components/BuscadorProfesional';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { registerForPushNotificationsAsync } from '../utils/notifications'; // ajusta ruta si es necesario
 
 
 
@@ -45,7 +46,7 @@ interface Trabajador {
   longitud: number;
 }
 
-const API = 'http://192.168.0.186:8000';
+const API = 'http://192.168.100.9:8000';
 
 export default function MapaTrabajadoresScreen() {
   const { tokens } = useAuth();
@@ -70,6 +71,23 @@ export default function MapaTrabajadoresScreen() {
     marginTop: Platform.select({ ios: 150, android: 150 }),
     marginBottom: insets.bottom + 30, // 🔼 permite ver botones flotantes
   };
+
+
+  useEffect(() => {
+    if (!tokens?.access) return; // ⛔ Salta si no está autenticado
+    registerForPushNotificationsAsync().then(token => {
+      if (token) {
+        fetch('http://192.168.100.9:8000/api/guardar-token/', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${tokens.access}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ push_token: token }),
+        });
+      }
+    });
+  }, []);
 
 
   useEffect(() => {

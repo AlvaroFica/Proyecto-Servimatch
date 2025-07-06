@@ -21,8 +21,9 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny
 from rest_framework.decorators import api_view, permission_classes
 from django.contrib.auth import get_user_model
-from .models import Trabajador
+from .models import Trabajador, Cliente, Chat, Mensaje
 import json  # ← asegúrate de tenerlo al inicio del archivo
+from django.db import models  # asegúrate de tener esto importado arriba
 
 
 
@@ -522,35 +523,36 @@ class GaleriaTrabajadorViewSet(viewsets.ModelViewSet):
 
 
 
-
-
-
-
-from .models import Chat, Mensaje
-from .serializers import ChatSerializer, MensajeSerializer
 class ChatViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
 
-    # GET /api/chats/<id_trabajador>/
+    # GET /api/chats/<pk>/
     def retrieve(self, request, pk=None):
         usuario = request.user
-        trabajador_id = pk
+        chat = get_object_or_404(Chat, id=pk)
 
-        chat = Chat.objects.filter(cliente=usuario, trabajador_id=trabajador_id).first()
-        if not chat:
-            chat = Chat.objects.create(cliente=usuario, trabajador_id=trabajador_id)
+        # Validar que el usuario esté involucrado en el chat
+        if chat.cliente != usuario and chat.trabajador != usuario:
+            return Response({'error': 'No tienes acceso a este chat'}, status=403)
 
         serializer = ChatSerializer(chat)
         return Response(serializer.data)
 
-    # GET /api/chats/<chat_id>/mensajes/
-    # POST /api/chats/<chat_id>/mensajes/
+
+    # GET y POST /api/chats/<chat_id>/mensajes/
     @action(detail=True, methods=['get', 'post'])
     def mensajes(self, request, pk=None):
         chat = get_object_or_404(Chat, id=pk)
 
         if request.method == 'GET':
             mensajes = chat.mensajes.order_by('enviado')
+
+            # ✅ Marcar como leídos todos los mensajes del otro usuario
+            mensajes_para_mi = mensajes.filter(leido=False).exclude(remitente=request.user)
+            for m in mensajes_para_mi:
+                m.leido = True
+                m.save(update_fields=['leido'])
+
             return Response(MensajeSerializer(mensajes, many=True).data)
 
         if request.method == 'POST':
@@ -564,3 +566,31 @@ class ChatViewSet(viewsets.ViewSet):
                 contenido=contenido
             )
             return Response(MensajeSerializer(mensaje).data, status=201)
+
+
+class MisChatsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        usuario = request.user
+
+        chats = Chat.objects.filter(models.Q(cliente=usuario) | models.Q(trabajador=usuario))
+
+        # ✅ Añadir conteo de no leídos
+        for chat in chats:
+            chat.no_leidos = chat.mensajes.exclude(remitente=usuario).filter(leido=False).count()
+
+        serializer = ChatSerializer(chats, many=True, context={'request': request})
+        return Response(serializer.data)
+
+
+class GuardarPushTokenView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        token = request.data.get('push_token')
+        if token:
+            request.user.push_token = token
+            request.user.save()
+            return Response({'mensaje': 'Token guardado correctamente'})
+        return Response({'error': 'Token no proporcionado'}, status=400)

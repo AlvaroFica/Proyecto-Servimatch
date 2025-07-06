@@ -1,10 +1,10 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
-from .views import ProfesionViewSet, PlanServicioViewSet, ReservaViewSet, CreateCheckoutSessionView, StripeRedirectView, StripeCancelRedirectView, SolicitudViewSet
+from .views import ProfesionViewSet, PlanServicioViewSet, ReservaViewSet, CreateCheckoutSessionView, StripeRedirectView, StripeCancelRedirectView, SolicitudViewSet, UsuarioViewSet, MisChatsView 
 from django.conf import settings
 from django.conf.urls.static import static
-from .views import UsuarioViewSet
+from .views import GuardarPushTokenView
 
 
 
@@ -24,16 +24,7 @@ router.register(r'profesiones', ProfesionViewSet, basename='profesiones')
 router.register(r'planes', PlanServicioViewSet, basename='planes')
 router.register(r'reservas', ReservaViewSet, basename='reserva')
 router.register(r'fotos-trabajador', views.GaleriaTrabajadorViewSet, basename='fotos-trabajador')
-
-
-
-
 router.register(r'chats', views.ChatViewSet, basename='chat')
-
-
-
-
-
 
 
 urlpatterns = [
@@ -46,6 +37,8 @@ urlpatterns = [
     path('trabajadores-cercanos/', views.trabajadores_cercanos, name='trabajadores-cercanos'),
     path('usuarios/actualizar-perfil/', views.ActualizarPerfilView.as_view(), name='actualizar-perfil'),
     path('ranking/trabajadores/', views.top_trabajadores, name='top-trabajadores'),
+    path('chats/', MisChatsView.as_view(), name='mis-chats'),
+    path('api/guardar-token/', GuardarPushTokenView.as_view()),
     path('', include(router.urls)),
 ]
 

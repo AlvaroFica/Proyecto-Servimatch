@@ -401,9 +401,35 @@ class MensajeSerializer(serializers.ModelSerializer):
 
 
 class ChatSerializer(serializers.ModelSerializer):
-    cliente = UsuarioSimpleSerializer(read_only=True)
-    trabajador = UsuarioSimpleSerializer(read_only=True)
+    cliente = serializers.SerializerMethodField()
+    trabajador = serializers.SerializerMethodField()
+    no_leidos = serializers.SerializerMethodField()  # ✅ nuevo campo
 
     class Meta:
         model = Chat
-        fields = ['id', 'cliente', 'trabajador', 'creado']
+        fields = ['id', 'cliente', 'trabajador', 'creado', 'no_leidos']
+
+    def get_cliente(self, obj):
+
+        cliente = obj.cliente
+        return {
+            "id": cliente.id,
+            "nombre": cliente.nombre,
+            "apellido": cliente.apellido,
+            "foto_perfil": cliente.foto_perfil.url if cliente.foto_perfil else None
+        }
+
+
+    def get_trabajador(self, obj):
+
+        trabajador = obj.trabajador
+
+        return {
+            "id": trabajador.id,
+            "nombre": trabajador.nombre,
+            "apellido": trabajador.apellido,
+            "foto_perfil": trabajador.foto_perfil.url if trabajador.foto_perfil else None
+        }
+
+    def get_no_leidos(self, obj):
+        return getattr(obj, 'no_leidos', 0)
