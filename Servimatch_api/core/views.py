@@ -26,13 +26,15 @@ import json  # ← asegúrate de tenerlo al inicio del archivo
 
 
 
-
 from geopy.geocoders import Nominatim
 
 #Para pasarela de pago
 import stripe
 from django.conf import settings
 from datetime import datetime, timedelta
+import hmac
+import hashlib
+import requests
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -575,12 +577,18 @@ class IniciarPagoFlowView(APIView):
             # Parámetros para Flow
             data = {
                 "apiKey": settings.FLOW_API_KEY,
+                "commerceOrder": str(solicitud_id),  # ← agregado
                 "subject": "Pago de servicio",
                 "amount": float(monto),
                 "currency": "CLP",
                 "email": request.user.email,
                 "urlReturn": "servimatchapp://pago-exitoso",
-                "urlConfirmation": request.build_absolute_uri("/api/flow/confirmacion/"),
+
+                #Cambiar la url cada vez que se inicia ngrok
+                "urlConfirmation": "https://d3c4-2803-c100-2000-ea46-b5f3-bbd0-2780-d519.ngrok-free.app/api/flow/confirmacion/",
+                ##############################
+
+
                 "optional": f"solicitud_id={solicitud_id}"
             }
 
@@ -596,6 +604,12 @@ class IniciarPagoFlowView(APIView):
 
             # Enviar solicitud a Flow
             response = requests.post(f"{settings.FLOW_API_URL}/payment/create", data=data)
+
+            print(">>> 📤 Payload enviado a Flow:", data)
+            print(">>> 🌐 URL POST:", f"{settings.FLOW_API_URL}/payment/create")
+            print(">>> 🔁 Status:", response.status_code)
+            print(">>> 📥 Respuesta de Flow:", response.text)
+
             flow_data = response.json()
 
             if 'url' in flow_data:
@@ -606,52 +620,69 @@ class IniciarPagoFlowView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=500)
             
-
 @api_view(['POST'])
-@permission_classes([AllowAny])  # Flow no está autenticado
+@permission_classes([AllowAny])
 def confirmar_pago_flow(request):
     try:
+        # Obtener todos los datos que Flow está enviando
         data = request.POST.dict()
+        print(">>> 📥 DATOS RECIBIDOS DE FLOW:", data)
 
-        # Validar firma
+        # Extraer firma recibida
         received_signature = data.pop("s", None)
+        print(">>> 🔐 Firma recibida:", received_signature)
+
+        # Construir string para firmar
         sorted_keys = sorted(data.keys())
         to_sign = "".join(f"{k}{data[k]}" for k in sorted_keys)
+        print(">>> 📦 Cadena a firmar:", to_sign)
+
+        # Calcular firma esperada
         expected_signature = hmac.new(
             settings.FLOW_SECRET_KEY.encode(),
             to_sign.encode(),
             hashlib.sha256
         ).hexdigest()
+        print(">>> ✅ Firma esperada:", expected_signature)
 
         if received_signature != expected_signature:
+            print("❌ Firma inválida")
             return Response({"error": "Firma inválida"}, status=400)
 
-        # Extraer solicitud_id desde el campo 'optional'
-        solicitud_id = None
+        # Extraer ID de solicitud desde campo 'optional'
         optional = data.get("optional", "")
+        print(">>> 🧾 Campo optional:", optional)
+
+        solicitud_id = None
         if optional.startswith("solicitud_id="):
             solicitud_id = optional.replace("solicitud_id=", "")
 
         if not solicitud_id:
+            print("❌ No se encontró solicitud_id")
             return Response({"error": "No se pudo obtener solicitud_id"}, status=400)
+
+        from .models import Solicitud, Pago
 
         solicitud = Solicitud.objects.filter(id=solicitud_id).first()
         if not solicitud:
+            print("❌ Solicitud no encontrada:", solicitud_id)
             return Response({"error": "Solicitud no encontrada"}, status=404)
 
-        # Crear pago
+        # Crear objeto Pago
         Pago.objects.create(
             solicitud=solicitud,
             monto=solicitud.precio,
             liberado=False
         )
 
-        # Marcar solicitud como pagada/aceptada
         solicitud.estado = 'Aceptada'
         solicitud.aceptada = True
         solicitud.save(update_fields=['estado', 'aceptada'])
 
+        print("✅ Pago confirmado y solicitud actualizada")
         return Response({"status": "ok"})
 
     except Exception as e:
+        import traceback
+        print("❌ Error inesperado:", traceback.format_exc())
         return Response({"error": str(e)}, status=500)
