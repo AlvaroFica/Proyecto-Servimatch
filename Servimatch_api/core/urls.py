@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
-from .views import ProfesionViewSet, PlanServicioViewSet, ReservaViewSet, CreateCheckoutSessionView, StripeRedirectView, StripeCancelRedirectView, SolicitudViewSet
+from .views import ProfesionViewSet, PlanServicioViewSet, ReservaViewSet, CreateCheckoutSessionView, StripeRedirectView, StripeCancelRedirectView, SolicitudViewSet, IniciarPagoFlowView, confirmar_pago_flow
 from django.conf import settings
 from django.conf.urls.static import static
 from .views import UsuarioViewSet
@@ -37,7 +37,8 @@ router.register(r'chats', views.ChatViewSet, basename='chat')
 
 
 urlpatterns = [
-    
+    path('flow/iniciar-pago/', IniciarPagoFlowView.as_view(), name='flow-iniciar-pago'),
+    path('flow/confirmacion/', confirmar_pago_flow, name='flow-confirmacion'),
     path('stripe/create-checkout-session/', CreateCheckoutSessionView.as_view(), name='create-checkout-session'),
     path('stripe/success/', StripeRedirectView.as_view(), name='stripe-redirect-success'),
     path('stripe/cancel/', StripeCancelRedirectView.as_view(), name='stripe-redirect-cancel'),
