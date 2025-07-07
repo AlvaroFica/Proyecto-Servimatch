@@ -19,17 +19,19 @@
       "edgeToEdgeEnabled": true,
       "config": {
         "googleMobileAdsAppId": "ca-app-pub-3940256099942544~3347511713"
-      }
+      },
+      "package": "com.javi_road.Servimatch_app"
     },
-    
     "web": {
       "bundler": "metro",
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
-       "extra": {
-     "GOOGLE_MAPS_API_KEY": "AlzaSyCS6ooqYpElPP7tdiyInfylA4SQRNhzCio"
-   },
+   "extra": {
+      "GOOGLE_MAPS_API_KEY": "AlzaSyCS6ooqYpElPP7tdiyInfylA4SQRNhzCio",
+      "router": {}
+    },
+
     "plugins": [
       "expo-router",
       [
@@ -46,6 +48,8 @@
     "experiments": {
       "typedRoutes": true
     },
-    "deepLinks": ["servimatchapp://"]
+    "deepLinks": [
+      "servimatchapp://"
+    ]
   }
 }
