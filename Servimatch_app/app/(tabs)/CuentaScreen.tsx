@@ -31,7 +31,7 @@ export default function CuentaScreen() {
     (async () => {
       try {
         const res = await fetch(
-          'http://192.168.0.186:8000/api/usuarios/me/',
+          'http://192.168.100.104:8000/api/usuarios/me/',
           { headers: { Authorization: `Bearer ${accessToken}` } }
         );
         if (!res.ok) throw new Error(await res.text());
@@ -79,59 +79,63 @@ export default function CuentaScreen() {
   const avatarUri = user?.foto_perfil
     ? user.foto_perfil.startsWith('http')
       ? user.foto_perfil
-      : `http://192.168.0.186:8000${user.foto_perfil}`
+      : `http://192.168.100.104:8000${user.foto_perfil}`
     : null;
 
   return (
     <BaseLayout title="Mi cuenta">
       <ScrollView contentContainerStyle={[styles.content, { paddingBottom: 64 }]}>
 
-        <Animated.View style={[styles.userSection, { opacity: fadeAnim }]}>          
-          <Surface style={[styles.avatarContainer, { backgroundColor: theme.colors.surface }]}>            
+        <Animated.View style={[styles.userSection, { opacity: fadeAnim }]}>
+          <Surface style={[styles.avatarContainer, { backgroundColor: theme.colors.surface }]}>
             {avatarUri ? (
               <Avatar.Image size={100} source={{ uri: avatarUri }} />
             ) : (
               <Avatar.Icon size={100} icon="account" />
             )}
           </Surface>
-          <Title style={[styles.name, { color: theme.colors.onSurface }]}>            
+          <Title style={[styles.name, { color: theme.colors.onSurface }]}>
             {user?.nombre || 'Nombre'} {user?.apellido || 'Apellido'}
           </Title>
-          <Paragraph style={[styles.email, { color: theme.colors.onSurfaceVariant }]}>            
+          <Paragraph style={[styles.email, { color: theme.colors.onSurfaceVariant }]}>
             {user?.email || 'user@example.com'}
           </Paragraph>
         </Animated.View>
 
         <Divider style={styles.divider} />
 
-        <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: fadeAnim.interpolate({
-            inputRange: [0, 1],
-            outputRange: [20, 0],
-          }) }] }}>          
-          <Surface style={[styles.sectionContainer, { backgroundColor: theme.colors.surface }]}>            
+        <Animated.View style={{
+          opacity: fadeAnim, transform: [{
+            translateY: fadeAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [20, 0],
+            })
+          }]
+        }}>
+          <Surface style={[styles.sectionContainer, { backgroundColor: theme.colors.surface }]}>
             <List.Section>
               <List.Subheader style={{ color: theme.colors.onSurfaceVariant, fontSize: 16, fontWeight: '600' }}>
                 Cuenta
               </List.Subheader>
-              <List.Item                
+              <List.Item
                 title="Editar perfil"
                 left={props => <List.Icon {...props} icon="account-edit" color={theme.colors.primary} />}
                 onPress={() => router.push('/perfil/editar')}
                 style={styles.listItem}
               />
-              <List.Item                
+              <List.Item
                 title="Privacidad"
                 left={props => <List.Icon {...props} icon="lock" color={theme.colors.primary} />}
                 onPress={() => router.push('/configuracion/privacidad')}
                 style={styles.listItem}
               />
-              <List.Item                
+              <List.Item
                 title="Notificaciones"
                 left={props => <List.Icon {...props} icon="bell" color={theme.colors.primary} />}
                 onPress={() => router.push('/configuracion/notificaciones')}
                 style={styles.listItem}
               />
-              <List.Item                
+              <List.Item
                 title="Métodos de pago"
                 left={props => <List.Icon {...props} icon="credit-card" color={theme.colors.primary} />}
                 onPress={() => router.push('/configuracion/MetodosPago')}
@@ -142,9 +146,9 @@ export default function CuentaScreen() {
 
           <Divider style={styles.divider} />
 
-          <Surface style={[styles.sectionContainer, { backgroundColor: theme.colors.surface }]}>            
+          <Surface style={[styles.sectionContainer, { backgroundColor: theme.colors.surface }]}>
             <List.Section>
-              <View style={styles.buttonContainer}>                
+              <View style={styles.buttonContainer}>
                 <Button
                   mode="contained"
                   icon="map-marker-radius"
@@ -160,20 +164,20 @@ export default function CuentaScreen() {
               <List.Subheader style={{ color: theme.colors.onSurfaceVariant, fontSize: 16, fontWeight: '600' }}>
                 Actividad
               </List.Subheader>
-              <List.Item                
+              <List.Item
                 title="Mis solicitudes"
                 left={props => <List.Icon {...props} icon="format-list-bulleted" color={theme.colors.primary} />}
                 onPress={() => router.push('/solicitudes')}
                 style={styles.listItem}
               />
-              <List.Item                
+              <List.Item
                 title="Historial"
                 left={props => <List.Icon {...props} icon="history" color={theme.colors.primary} />}
                 onPress={() => router.push('./historial')}
                 style={styles.listItem}
               />
               {isTrabajador && (
-                <List.Item                  
+                <List.Item
                   title="Mis planes"
                   left={props => <List.Icon {...props} icon="file-document-outline" color={theme.colors.primary} />}
                   onPress={() => router.push('/PlanesTrabajadorScreen')}
@@ -185,12 +189,12 @@ export default function CuentaScreen() {
 
           <Divider style={styles.divider} />
 
-          <Surface style={[styles.sectionContainer, { backgroundColor: theme.colors.surface }]}>            
+          <Surface style={[styles.sectionContainer, { backgroundColor: theme.colors.surface }]}>
             <List.Section>
               <List.Subheader style={{ color: theme.colors.onSurfaceVariant, fontSize: 16, fontWeight: '600' }}>
                 Soporte
               </List.Subheader>
-              <List.Item                
+              <List.Item
                 title="Ayuda y soporte"
                 left={props => <List.Icon {...props} icon="help-circle-outline" color={theme.colors.primary} />}
                 onPress={() => router.push('/configuracion/ayuda')}
@@ -201,7 +205,7 @@ export default function CuentaScreen() {
 
           <Divider style={styles.divider} />
 
-          <Surface style={[styles.sectionContainer, { backgroundColor: theme.colors.surface }]}>            
+          <Surface style={[styles.sectionContainer, { backgroundColor: theme.colors.surface }]}>
             <Button
               mode="contained"
               icon="logout"
@@ -264,15 +268,15 @@ const styles = StyleSheet.create({
   actionButton: {
     borderRadius: 8,
   },
-logoutButton: {
-  borderRadius: 8,
-  marginHorizontal: 12,
-  marginTop: 8,
-  marginBottom: 32, // 🔼 garantiza que no quede pegado al tab bar
-},
-logoutContent: {
-  height: 40, // 🔼 lo dejamos como antes para buena interacción
-},
+  logoutButton: {
+    borderRadius: 8,
+    marginHorizontal: 12,
+    marginTop: 8,
+    marginBottom: 32, // 🔼 garantiza que no quede pegado al tab bar
+  },
+  logoutContent: {
+    height: 40, // 🔼 lo dejamos como antes para buena interacción
+  },
 
   loader: {
     flex: 1,

@@ -15,7 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BaseLayout from '../components/BaseLayout';
 import { useAuth } from '../context/AuthContext';
 
-const API_BASE_URL = 'http://192.168.0.186:8000';
+const API_BASE_URL = 'http://192.168.100.104:8000';
 
 export default function ConfirmarPagoScreen() {
   const { tokens } = useAuth();
@@ -133,7 +133,7 @@ export default function ConfirmarPagoScreen() {
           { paddingBottom: insets.bottom + 16, backgroundColor: theme.colors.background },
         ]}
       >
-        <Surface style={[styles.summary, { backgroundColor: theme.colors.surface }]}>  
+        <Surface style={[styles.summary, { backgroundColor: theme.colors.surface }]}>
           <Title>Resumen de Reserva</Title>
           <Paragraph>
             <Paragraph style={styles.bold}>Plan:</Paragraph> {nombre}

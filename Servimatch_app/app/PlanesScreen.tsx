@@ -3,18 +3,18 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
 import {
-    ActivityIndicator,
-    Button,
-    Card,
-    Paragraph,
-    Title,
-    useTheme,
+  ActivityIndicator,
+  Button,
+  Card,
+  Paragraph,
+  Title,
+  useTheme,
 } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BaseLayout from '../components/BaseLayout';
 import { useAuth } from '../context/AuthContext';
 
-const API_BASE_URL = 'http://192.168.0.186:8000';
+const API_BASE_URL = 'http://192.168.100.104:8000';
 
 interface Plan {
   id: number;
@@ -95,7 +95,7 @@ export default function PlanesScreen() {
           <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       ) : (
-        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>  
+        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
           <FlatList
             data={planes}
             keyExtractor={(p) => p.id.toString()}

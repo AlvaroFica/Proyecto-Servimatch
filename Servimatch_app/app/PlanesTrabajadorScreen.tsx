@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    TextInput,
-    View,
+  ActivityIndicator,
+  Alert,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
 } from 'react-native';
 import { Button, Card, Chip, Paragraph, Title, useTheme } from 'react-native-paper';
 import { useAuth } from '../context/AuthContext';
 
-const API = 'http://192.168.0.186:8000';
+const API = 'http://192.168.100.104:8000';
 
 export default function PlanesTrabajadorScreen() {
   const { tokens } = useAuth();

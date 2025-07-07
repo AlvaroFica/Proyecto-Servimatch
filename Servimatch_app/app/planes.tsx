@@ -2,28 +2,28 @@
 import { Picker } from '@react-native-picker/picker';
 import React, { useEffect, useState } from 'react';
 import {
-    FlatList,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    View
+  FlatList,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  View
 } from 'react-native';
 import {
-    ActivityIndicator,
-    Button,
-    FAB,
-    TextInput as PaperInput,
-    Modal as PaperModal,
-    Paragraph,
-    Portal,
-    Subheading,
-    Title,
-    useTheme
+  ActivityIndicator,
+  Button,
+  FAB,
+  TextInput as PaperInput,
+  Modal as PaperModal,
+  Paragraph,
+  Portal,
+  Subheading,
+  Title,
+  useTheme
 } from 'react-native-paper';
 import BaseLayout from '../components/BaseLayout';
 import { useAuth } from '../context/AuthContext';
 
-const API_BASE_URL = 'http://192.168.0.186:8000';
+const API_BASE_URL = 'http://192.168.100.104:8000';
 
 interface Servicio {
   id: number;

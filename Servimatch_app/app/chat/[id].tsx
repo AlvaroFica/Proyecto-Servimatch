@@ -5,7 +5,7 @@ import { Text, useTheme } from 'react-native-paper';
 import { useAuth } from '../../context/AuthContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const API_BASE_URL = 'http://192.168.0.186:8000';
+const API_BASE_URL = 'http://192.168.100.104:8000';
 
 export default function ChatScreen() {
   const { id } = useLocalSearchParams(); // ID del trabajador
@@ -103,8 +103,8 @@ export default function ChatScreen() {
 
   return (
     <KeyboardAvoidingView
-    behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    style={{ flex: 1, paddingTop: insets.top }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={{ flex: 1, paddingTop: insets.top }}
     >
       <View style={styles.header}>
         <Text style={styles.headerText}>Chat con trabajador ID: {id}</Text>

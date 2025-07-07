@@ -28,7 +28,7 @@ interface Solicitud {
   longitud: number;
 }
 
-const API = 'http://192.168.0.186:8000';
+const API = 'http://192.168.100.104:8000';
 
 export default function MapaSolicitudesScreen() {
   const { tokens } = useAuth();
@@ -110,8 +110,8 @@ export default function MapaSolicitudesScreen() {
           {count > 1
             ? `Encontré ${count} solicitudes`
             : count === 1
-            ? 'Encontré 1 solicitud'
-            : 'Sin solicitudes cercanas'}
+              ? 'Encontré 1 solicitud'
+              : 'Sin solicitudes cercanas'}
         </Text>
       </View>
 
@@ -233,32 +233,32 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 0,
   },
-centerButton: {
-  position: 'absolute',
-  bottom: 90,
-  right: 16,
-  zIndex: 20,
-  backgroundColor: '#A66DD4', // 💜 Lila moderno
-  borderRadius: 28,
-  elevation: 6,
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.25,
-  shadowRadius: 3.84,
-},
-centerButtonIcon: {
-  alignSelf: 'center',
-},
+  centerButton: {
+    position: 'absolute',
+    bottom: 90,
+    right: 16,
+    zIndex: 20,
+    backgroundColor: '#A66DD4', // 💜 Lila moderno
+    borderRadius: 28,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  centerButtonIcon: {
+    alignSelf: 'center',
+  },
 
-centerButtonContent: {
-  width: 48,
-  height: 48,
-  paddingHorizontal: 0,
-  paddingVertical: 0,
-  justifyContent: 'center',
-},
+  centerButtonContent: {
+    width: 48,
+    height: 48,
+    paddingHorizontal: 0,
+    paddingVertical: 0,
+    justifyContent: 'center',
+  },
 
-centerButtonLabel: {
-  color: '#ffffff',
-},
+  centerButtonLabel: {
+    color: '#ffffff',
+  },
 });

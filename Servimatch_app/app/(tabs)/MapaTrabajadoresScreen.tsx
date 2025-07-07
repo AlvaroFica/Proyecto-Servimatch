@@ -45,7 +45,7 @@ interface Trabajador {
   longitud: number;
 }
 
-const API = 'http://192.168.0.186:8000';
+const API = 'http://192.168.100.104:8000';
 
 export default function MapaTrabajadoresScreen() {
   const { tokens } = useAuth();
@@ -157,9 +157,9 @@ export default function MapaTrabajadoresScreen() {
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos(toRad(lat1)) *
-        Math.cos(toRad(lat2)) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
+      Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   };
@@ -181,8 +181,8 @@ export default function MapaTrabajadoresScreen() {
   return (
     <BaseLayout title="Explorar trabajadores" back>
       {/* Contenedor de búsqueda fijo sobre el mapa */}
-      
-      
+
+
       <BuscadorProfesional
         query={query}
         setQuery={setQuery}
@@ -192,7 +192,7 @@ export default function MapaTrabajadoresScreen() {
         theme={theme}
       />
 
-       <BannerRotativo />    
+      <BannerRotativo />
 
 
 
@@ -216,8 +216,8 @@ export default function MapaTrabajadoresScreen() {
           {count > 1
             ? `Encontré ${count} profesionales`
             : count === 1
-            ? 'Encontré 1 profesional'
-            : 'No se encontraron profesionales'}
+              ? 'Encontré 1 profesional'
+              : 'No se encontraron profesionales'}
         </Text>
       </View>
 
@@ -249,7 +249,7 @@ export default function MapaTrabajadoresScreen() {
       {/* Mapa */}
       <MapView
         ref={mapRef}
-        style={mapStyle} 
+        style={mapStyle}
 
         provider={PROVIDER_GOOGLE}
         mapType="standard"
@@ -264,11 +264,11 @@ export default function MapaTrabajadoresScreen() {
           if (t.latitud == null || t.longitud == null) return null;
           const distance = userLoc
             ? calculateDistance(
-                userLoc.latitude,
-                userLoc.longitude,
-                Number(t.latitud),
-                Number(t.longitud)
-              ).toFixed(1)
+              userLoc.latitude,
+              userLoc.longitude,
+              Number(t.latitud),
+              Number(t.longitud)
+            ).toFixed(1)
             : null;
           return (
             <Marker
@@ -313,16 +313,15 @@ export default function MapaTrabajadoresScreen() {
               title={current ? `${current.nombre} ${current.apellido}` : ''}
               subtitle={
                 current
-                  ? `${current.profesion}${
-                      userLoc && current
-                        ? ` • ${calculateDistance(
-                            userLoc.latitude,
-                            userLoc.longitude,
-                            Number(current.latitud),
-                            Number(current.longitud)
-                          ).toFixed(1)} km`
-                        : ''
-                    }`
+                  ? `${current.profesion}${userLoc && current
+                    ? ` • ${calculateDistance(
+                      userLoc.latitude,
+                      userLoc.longitude,
+                      Number(current.latitud),
+                      Number(current.longitud)
+                    ).toFixed(1)} km`
+                    : ''
+                  }`
                   : ''
               }
               titleStyle={{ color: theme.colors.primary, fontWeight: 'bold' }}
@@ -423,15 +422,15 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   fab: {
-  position: 'absolute',
-  right: 16,
-  width: 48,                // 👈 ancho igual al alto
-  height: 48,
-  borderRadius: 24,         // 👈 mitad del tamaño = círculo
-  justifyContent: 'center',
-  alignItems: 'center',
-  elevation: 6,             // sombra para Android
-},
+    position: 'absolute',
+    right: 16,
+    width: 48,                // 👈 ancho igual al alto
+    height: 48,
+    borderRadius: 24,         // 👈 mitad del tamaño = círculo
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 6,             // sombra para Android
+  },
 
   modalContainer: {
     margin: 16,

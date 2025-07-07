@@ -3,12 +3,12 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    SafeAreaView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 
@@ -39,7 +39,7 @@ export default function DetallePlanScreen() {
   const fetchPlan = async () => {
     try {
       const res = await fetch(
-        `http://192.168.0.186:8000/api/planes/${planId}/`,
+        `http://192.168.100.104:8000/api/planes/${planId}/`,
         { headers: { Authorization: `Bearer ${tokens!.access}` } }
       );
       if (!res.ok) throw new Error(await res.text());
@@ -107,7 +107,7 @@ export default function DetallePlanScreen() {
         </TouchableOpacity>
       </View>
     </SafeAreaView>
-);
+  );
 
 }
 

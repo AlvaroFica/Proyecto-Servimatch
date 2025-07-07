@@ -38,38 +38,38 @@ export default function PerfilEditarScreen() {
 
   const diasSemana = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
 
-const horas = [
-  "08:00", "09:00", "10:00", "11:00", "12:00",
-  "13:00", "14:00", "15:00", "16:00", "17:00",
-  "18:00", "19:00", "20:00", "21:00"
-];
+  const horas = [
+    "08:00", "09:00", "10:00", "11:00", "12:00",
+    "13:00", "14:00", "15:00", "16:00", "17:00",
+    "18:00", "19:00", "20:00", "21:00"
+  ];
 
-const [disponibilidadObj, setDisponibilidadObj] = useState<{
-  [key: string]: { inicio: string; fin: string }[];
-}>({
-  lunes: [],
-  martes: [],
-  miércoles: [],
-  jueves: [],
-  viernes: [],
-  sábado: [],
-  domingo: [],
-});
-const agregarFranja = (dia: string) => {
-  setDisponibilidadObj((prev) => ({
-    ...prev,
-    [dia]: [...prev[dia], { inicio: '', fin: '' }],
-  }));
-};
-const actualizarFranja = (dia: string, index: number, campo: 'inicio' | 'fin', valor: string) => {
-  const nuevasFranjas = [...disponibilidadObj[dia]];
-  nuevasFranjas[index][campo] = valor;
-  setDisponibilidadObj((prev) => ({ ...prev, [dia]: nuevasFranjas }));
-};
-const eliminarFranja = (dia: string, index: number) => {
-  const nuevasFranjas = disponibilidadObj[dia].filter((_, i) => i !== index);
-  setDisponibilidadObj((prev) => ({ ...prev, [dia]: nuevasFranjas }));
-};
+  const [disponibilidadObj, setDisponibilidadObj] = useState<{
+    [key: string]: { inicio: string; fin: string }[];
+  }>({
+    lunes: [],
+    martes: [],
+    miércoles: [],
+    jueves: [],
+    viernes: [],
+    sábado: [],
+    domingo: [],
+  });
+  const agregarFranja = (dia: string) => {
+    setDisponibilidadObj((prev) => ({
+      ...prev,
+      [dia]: [...prev[dia], { inicio: '', fin: '' }],
+    }));
+  };
+  const actualizarFranja = (dia: string, index: number, campo: 'inicio' | 'fin', valor: string) => {
+    const nuevasFranjas = [...disponibilidadObj[dia]];
+    nuevasFranjas[index][campo] = valor;
+    setDisponibilidadObj((prev) => ({ ...prev, [dia]: nuevasFranjas }));
+  };
+  const eliminarFranja = (dia: string, index: number) => {
+    const nuevasFranjas = disponibilidadObj[dia].filter((_, i) => i !== index);
+    setDisponibilidadObj((prev) => ({ ...prev, [dia]: nuevasFranjas }));
+  };
 
 
 
@@ -80,10 +80,10 @@ const eliminarFranja = (dia: string, index: number) => {
     (async () => {
       try {
         const [perfilRes, serviciosRes] = await Promise.all([
-          fetch('http://192.168.0.186:8000/api/usuarios/me/', {
+          fetch('http://192.168.100.104:8000/api/usuarios/me/', {
             headers: { Authorization: `Bearer ${accessToken}` },
           }),
-          fetch('http://192.168.0.186:8000/api/servicios/', {
+          fetch('http://192.168.100.104:8000/api/servicios/', {
             headers: { Authorization: `Bearer ${accessToken}` },
           }),
         ]);
@@ -121,7 +121,7 @@ const eliminarFranja = (dia: string, index: number) => {
           setFotoUri(
             data.foto_perfil.startsWith('http')
               ? data.foto_perfil
-              : `http://192.168.0.186:8000${data.foto_perfil}`
+              : `http://192.168.100.104:8000${data.foto_perfil}`
           );
         }
 
@@ -205,7 +205,7 @@ const eliminarFranja = (dia: string, index: number) => {
 
     try {
       const res = await fetch(
-        'http://192.168.0.186:8000/api/usuarios/actualizar-perfil/',
+        'http://192.168.100.104:8000/api/usuarios/actualizar-perfil/',
         {
           method: 'PUT',
           headers: { Authorization: `Bearer ${accessToken}` },
@@ -223,48 +223,48 @@ const eliminarFranja = (dia: string, index: number) => {
     }
   };
   const pickGalleryImage = async () => {
-  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-  if (status !== 'granted') {
-    Alert.alert('Permiso denegado');
-    return;
-  }
-
-  const result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ImagePicker.MediaTypeOptions.Images,
-    allowsEditing: true,
-    quality: 0.7,
-  });
-
-
-  if (!result.canceled) {
-    const uri = result.assets[0].uri;
-    const fileName = uri.split('/').pop() || 'galeria.jpg';
-    const ext = fileName.split('.').pop();
-
-    const formData = new FormData();
-    formData.append('imagen', {
-      uri,
-      name: fileName,
-      type: `image/${ext}`,
-    } as any);
-
-    try {
-      const res = await fetch('http://192.168.0.186:8000/api/fotos-trabajador/', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: formData,
-      });
-
-      if (!res.ok) throw new Error(await res.text());
-      Alert.alert('Éxito', 'Imagen subida a la galería');
-    } catch (e: any) {
-      console.error(e);
-      Alert.alert('Error', e.message);
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permiso denegado');
+      return;
     }
-  }
-};
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.7,
+    });
+
+
+    if (!result.canceled) {
+      const uri = result.assets[0].uri;
+      const fileName = uri.split('/').pop() || 'galeria.jpg';
+      const ext = fileName.split('.').pop();
+
+      const formData = new FormData();
+      formData.append('imagen', {
+        uri,
+        name: fileName,
+        type: `image/${ext}`,
+      } as any);
+
+      try {
+        const res = await fetch('http://192.168.100.104:8000/api/fotos-trabajador/', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: formData,
+        });
+
+        if (!res.ok) throw new Error(await res.text());
+        Alert.alert('Éxito', 'Imagen subida a la galería');
+      } catch (e: any) {
+        console.error(e);
+        Alert.alert('Error', e.message);
+      }
+    }
+  };
 
 
   if (loading) {
@@ -283,7 +283,7 @@ const eliminarFranja = (dia: string, index: number) => {
         <Animated.View style={{ opacity: fadeAnim }}>
           <View style={styles.avatarSection}>
             <TouchableOpacity onPress={pickImage} activeOpacity={0.7}>
-              <Surface style={[styles.avatarContainer, { backgroundColor: theme.colors.surface }]}>   
+              <Surface style={[styles.avatarContainer, { backgroundColor: theme.colors.surface }]}>
                 {fotoUri ? (
                   <Avatar.Image size={100} source={{ uri: fotoUri }} />
                 ) : (
@@ -294,13 +294,13 @@ const eliminarFranja = (dia: string, index: number) => {
             <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>Foto de perfil</Text>
           </View>
 
-          <Surface style={[styles.formSection, { backgroundColor: theme.colors.surface }]}>   
+          <Surface style={[styles.formSection, { backgroundColor: theme.colors.surface }]}>
             <TextInput label="Nombre" value={nombre} onChangeText={setNombre} mode="outlined" style={styles.input} />
             <TextInput label="Apellido" value={apellido} onChangeText={setApellido} mode="outlined" style={styles.input} />
             <TextInput label="Teléfono" value={telefono} onChangeText={setTelefono} mode="outlined" style={styles.input} />
             <TextInput label="Biografía" value={biografia} onChangeText={setBiografia} mode="outlined" multiline style={[styles.input, { height: 80 }]} />
             <TextInput label="Dirección" value={direccion} onChangeText={setDireccion} mode="outlined" style={styles.input} />
-            
+
 
             <View style={styles.tablaContainer}>
               {diasSemana.map((dia) => {
@@ -395,7 +395,7 @@ const eliminarFranja = (dia: string, index: number) => {
               Subir imagen a galería
             </Button>
 
-            
+
           </Surface>
         </Animated.View>
       </ScrollView>
@@ -420,83 +420,83 @@ const styles = StyleSheet.create({
   },
 
   chip: { margin: 4 },
- 
 
 
 
-pickerContainer: {
-  borderWidth: 1,
-  borderRadius: 6,
-  borderColor: '#ccc',
-  overflow: 'hidden',
-  height: 35,
-  justifyContent: 'center',
-},
+
+  pickerContainer: {
+    borderWidth: 1,
+    borderRadius: 6,
+    borderColor: '#ccc',
+    overflow: 'hidden',
+    height: 35,
+    justifyContent: 'center',
+  },
 
 
 
-tablaContainer: {
-  marginTop: 8,
-},
+  tablaContainer: {
+    marginTop: 8,
+  },
 
-diaBox: {
-  backgroundColor: '#f8f8fc',
-  borderRadius: 10,
-  marginBottom: 10,
-  overflow: 'hidden',
-  elevation: 1,
-},
+  diaBox: {
+    backgroundColor: '#f8f8fc',
+    borderRadius: 10,
+    marginBottom: 10,
+    overflow: 'hidden',
+    elevation: 1,
+  },
 
-diaHeader: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  padding: 10,
-  justifyContent: 'space-between',
-},
+  diaHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    justifyContent: 'space-between',
+  },
 
-diaEmoji: {
-  fontSize: 16,
-},
+  diaEmoji: {
+    fontSize: 16,
+  },
 
-diaNombre: {
-  flex: 1,
-  marginLeft: 6,
-  fontWeight: '600',
-},
+  diaNombre: {
+    flex: 1,
+    marginLeft: 6,
+    fontWeight: '600',
+  },
 
-diaResumen: {
-  fontSize: 13,
-  fontStyle: 'italic',
-  color: '#888',
-},
+  diaResumen: {
+    fontSize: 13,
+    fontStyle: 'italic',
+    color: '#888',
+  },
 
-diaArrow: {
-  fontSize: 16,
-  marginLeft: 4,
-},
+  diaArrow: {
+    fontSize: 16,
+    marginLeft: 4,
+  },
 
-franjaRow: {
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  paddingHorizontal: 10,
-  paddingBottom: 10,
-},
+  franjaRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+    paddingBottom: 10,
+  },
 
-pickerColumn: {
-  flex: 1,
-  marginHorizontal: 4,
-},
+  pickerColumn: {
+    flex: 1,
+    marginHorizontal: 4,
+  },
 
-pickerLabel: {
-  fontSize: 12,
-  color: '#444',
-  marginBottom: 2,
-},
+  pickerLabel: {
+    fontSize: 12,
+    color: '#444',
+    marginBottom: 2,
+  },
 
-picker: {
-  backgroundColor: '#fff',
-  borderRadius: 6,
-},
+  picker: {
+    backgroundColor: '#fff',
+    borderRadius: 6,
+  },
 
 
 });

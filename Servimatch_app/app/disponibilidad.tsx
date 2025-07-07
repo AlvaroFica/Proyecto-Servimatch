@@ -13,7 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BaseLayout from '../components/BaseLayout';
 import { useAuth } from '../context/AuthContext';
 
-const API_BASE_URL = 'http://192.168.0.186:8000';
+const API_BASE_URL = 'http://192.168.100.104:8000';
 const WORK_DAY_START = 8;
 const WORK_DAY_END = 18;
 
@@ -53,50 +53,50 @@ export default function DisponibilidadScreen() {
     const today = new Date();
     today.setDate(today.getDate() - ((today.getDay() + 6) % 7)); // Lunes
     return today;
- });
-useEffect(() => {
-  if (!tokens?.access || !planId) {
-    console.warn("⚠️ Token o planId faltante:", { token: tokens?.access, planId });
-    return;
-  }
+  });
+  useEffect(() => {
+    if (!tokens?.access || !planId) {
+      console.warn("⚠️ Token o planId faltante:", { token: tokens?.access, planId });
+      return;
+    }
 
-  console.log("📡 Solicitando plan:", planId);
+    console.log("📡 Solicitando plan:", planId);
 
-  fetch(`${API_BASE_URL}/api/planes/${planId}/`, {
-    headers: { Authorization: `Bearer ${tokens.access}` },
-  })
-    .then(async res => {
-      if (!res.ok) {
-        const text = await res.text();
-        console.error(`❌ Error HTTP al obtener plan (${res.status}):`, text);
-        throw new Error(`HTTP ${res.status}`);
-      }
-      return res.json();
+    fetch(`${API_BASE_URL}/api/planes/${planId}/`, {
+      headers: { Authorization: `Bearer ${tokens.access}` },
     })
-    .then((data) => {
-      console.log('✅ Plan recibido:', data);
-      setTrabajador(data.trabajador);
+      .then(async res => {
+        if (!res.ok) {
+          const text = await res.text();
+          console.error(`❌ Error HTTP al obtener plan (${res.status}):`, text);
+          throw new Error(`HTTP ${res.status}`);
+        }
+        return res.json();
+      })
+      .then((data) => {
+        console.log('✅ Plan recibido:', data);
+        setTrabajador(data.trabajador);
 
-      const [h, m] = data.duracion_estimado.split(':').map(Number);
-      if (isNaN(h) || isNaN(m)) throw new Error('Formato inválido en duración');
-      setDuracion(h * 60 + m);
-    })
-    .catch(err => {
-      console.error('🚨 Error al cargar datos del plan:', err.message || err);
-      Alert.alert('Error', 'No se pudo cargar los datos del plan');
-    });
-}, [tokens, planId]);
+        const [h, m] = data.duracion_estimado.split(':').map(Number);
+        if (isNaN(h) || isNaN(m)) throw new Error('Formato inválido en duración');
+        setDuracion(h * 60 + m);
+      })
+      .catch(err => {
+        console.error('🚨 Error al cargar datos del plan:', err.message || err);
+        Alert.alert('Error', 'No se pudo cargar los datos del plan');
+      });
+  }, [tokens, planId]);
 
 
 
- 
-const inicio = fechaInicioSemana;
-const fin = finSemana(fechaInicioSemana);
-const mismoMes = inicio.getMonth() === fin.getMonth();
 
-const textoSemana = mismoMes
-  ? `Semana del ${formatearFecha(inicio)} al ${formatearFecha(fin)} de ${formatearMes(inicio)}`
-  : `Semana del ${formatearFechaCompleta(inicio)} al ${formatearFechaCompleta(fin)}`;
+  const inicio = fechaInicioSemana;
+  const fin = finSemana(fechaInicioSemana);
+  const mismoMes = inicio.getMonth() === fin.getMonth();
+
+  const textoSemana = mismoMes
+    ? `Semana del ${formatearFecha(inicio)} al ${formatearFecha(fin)} de ${formatearMes(inicio)}`
+    : `Semana del ${formatearFechaCompleta(inicio)} al ${formatearFechaCompleta(fin)}`;
 
 
   // Duración del plan
@@ -195,50 +195,50 @@ const textoSemana = mismoMes
         </Title>
 
 
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
-            <Button
-              onPress={() => {
-                const nueva = new Date(fechaInicioSemana);
-                nueva.setDate(nueva.getDate() - 7);
-                setFechaInicioSemana(nueva);
-              }}
-              disabled={fechaInicioSemana <= new Date(new Date().toDateString())}
-            >
-              ‹
-            </Button>
-
-
-            <Button onPress={() => {
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+          <Button
+            onPress={() => {
               const nueva = new Date(fechaInicioSemana);
-              nueva.setDate(nueva.getDate() + 7);
+              nueva.setDate(nueva.getDate() - 7);
               setFechaInicioSemana(nueva);
-            }}>
-              ›
-            </Button>
-          </View>
-          <View style={styles.semanaGrid}>
-            {getSemana(fechaInicioSemana).map(({ dia, fecha: f }) => {
-              const fechaStr = f.toISOString().slice(0, 10);
-              const seleccionado = fecha.toDateString() === f.toDateString();
+            }}
+            disabled={fechaInicioSemana <= new Date(new Date().toDateString())}
+          >
+            ‹
+          </Button>
 
-              return (
-                <Chip
-                  key={fechaStr}
-                  selected={seleccionado}
-                  onPress={() => setFecha(f)}
-                  style={[
-                    styles.diaChip,
-                    seleccionado && styles.diaChipSeleccionado,
-                  ]}
-                  textStyle={{ color: seleccionado ? '#fff' : '#000' }}
-                >
-                  {`${dia} ${f.getDate()}`}
-                </Chip>
-              );
-            })}
-          </View>
 
-          
+          <Button onPress={() => {
+            const nueva = new Date(fechaInicioSemana);
+            nueva.setDate(nueva.getDate() + 7);
+            setFechaInicioSemana(nueva);
+          }}>
+            ›
+          </Button>
+        </View>
+        <View style={styles.semanaGrid}>
+          {getSemana(fechaInicioSemana).map(({ dia, fecha: f }) => {
+            const fechaStr = f.toISOString().slice(0, 10);
+            const seleccionado = fecha.toDateString() === f.toDateString();
+
+            return (
+              <Chip
+                key={fechaStr}
+                selected={seleccionado}
+                onPress={() => setFecha(f)}
+                style={[
+                  styles.diaChip,
+                  seleccionado && styles.diaChipSeleccionado,
+                ]}
+                textStyle={{ color: seleccionado ? '#fff' : '#000' }}
+              >
+                {`${dia} ${f.getDate()}`}
+              </Chip>
+            );
+          })}
+        </View>
+
+
 
 
         <Title style={{ marginTop: 16 }}>Franjas disponibles</Title>
@@ -281,8 +281,7 @@ const textoSemana = mismoMes
           style={styles.confirmBtn}
           onPress={() =>
             router.push(
-              `./confirmarPago?planId=${planId}&fecha=${fechaIso}&hora_inicio=${
-                selectedSlot?.split(' - ')[0]
+              `./confirmarPago?planId=${planId}&fecha=${fechaIso}&hora_inicio=${selectedSlot?.split(' - ')[0]
               }`
             )
           }
@@ -301,10 +300,10 @@ const styles = StyleSheet.create({
   chip: { margin: 4 },
   confirmBtn: { marginTop: 24 },
   semanaGrid: {
-  flexDirection: 'row',
-  flexWrap: 'wrap',
-  justifyContent: 'space-between',
-  marginVertical: 12,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginVertical: 12,
   },
   diaChip: {
     width: '30%',
@@ -315,34 +314,34 @@ const styles = StyleSheet.create({
     backgroundColor: '#1976D2',
   },
   tituloCentrado: {
-  textAlign: 'center',
-  fontSize: 18,
-  fontWeight: 'bold',
-  marginBottom: 8,
-},
-trabajadorBox: {
-  alignItems: 'center',
-  marginBottom: 20,
-},
+    textAlign: 'center',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  trabajadorBox: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
 
-fotoPerfil: {
-  width: 80,
-  height: 80,
-  borderRadius: 40,
-  marginBottom: 8,
-  backgroundColor: '#ccc',
-},
+  fotoPerfil: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    marginBottom: 8,
+    backgroundColor: '#ccc',
+  },
 
-trabajadorNombre: {
-  fontSize: 18,
-  fontWeight: 'bold',
-  color: '#000',
-},
+  trabajadorNombre: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000',
+  },
 
-trabajadorEspecialidad: {
-  fontSize: 14,
-  color: '#666',
-},
+  trabajadorEspecialidad: {
+    fontSize: 14,
+    color: '#666',
+  },
 
 
 });

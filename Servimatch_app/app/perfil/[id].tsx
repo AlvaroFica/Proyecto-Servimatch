@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Alert, Dimensions, ScrollView, StyleSheet, View, TouchableOpacity  } from 'react-native';
+import { Alert, Dimensions, ScrollView, StyleSheet, View, TouchableOpacity } from 'react-native';
 import {
   ActivityIndicator,
   Avatar,
@@ -16,7 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BaseLayout from '../../components/BaseLayout';
 import { useAuth } from '../../context/AuthContext';
 
-const API_BASE_URL = 'http://192.168.0.186:8000';
+const API_BASE_URL = 'http://192.168.100.104:8000';
 
 interface FotoTrabajador { imagen: string; }
 
@@ -125,10 +125,10 @@ export default function PerfilTrabajadorScreen() {
           >
             <Avatar.Image size={100} source={{ uri: fotoUri }} style={styles.avatar} />
             <View style={styles.headerInfo}>
-              <Title style={[styles.name, { color: theme.colors.onPrimaryContainer }]}>  
+              <Title style={[styles.name, { color: theme.colors.onPrimaryContainer }]}>
                 {perfil.nombre} {perfil.apellido}
               </Title>
-              <Text style={[styles.profession, { color: theme.colors.onPrimaryContainer }]}>  
+              <Text style={[styles.profession, { color: theme.colors.onPrimaryContainer }]}>
                 {perfil.profesion}
               </Text>
               <View style={styles.stars}>
@@ -153,7 +153,7 @@ export default function PerfilTrabajadorScreen() {
             {perfil.biografia ? (
               <View style={styles.sectionContainer}>
                 <Text style={[styles.sectionTitle, { color: theme.colors.primary }]}>Acerca de mí</Text>
-                <Paragraph style={[styles.sectionText, { color: theme.colors.onSurface }]}>  
+                <Paragraph style={[styles.sectionText, { color: theme.colors.onSurface }]}>
                   {perfil.biografia}
                 </Paragraph>
               </View>
@@ -169,7 +169,7 @@ export default function PerfilTrabajadorScreen() {
 
                 const hoy = new Date().toLocaleString('es-CL', { weekday: 'long' }).toLowerCase();
                 const franjasHoy = (disponibilidadParsed[hoy] || []).filter(f => f.inicio && f.fin);
-                
+
 
                 return (
                   <View style={styles.sectionContainer}>
@@ -245,15 +245,15 @@ export default function PerfilTrabajadorScreen() {
               </View>
             ) : null}
           </Card.Content>
-          <Card.Actions style={styles.actions}>  
+          <Card.Actions style={styles.actions}>
             <Button
               mode="contained"
               onPress={() =>
                 router.push(`/PlanesScreen?trabajadorId=${perfil.id}`)
               }
-              style={[styles.btn, { backgroundColor: theme.colors.primary }]}  
+              style={[styles.btn, { backgroundColor: theme.colors.primary }]}
               labelStyle={{ color: theme.colors.onPrimary }}
-            > 
+            >
               Contratar
             </Button>
             <Button

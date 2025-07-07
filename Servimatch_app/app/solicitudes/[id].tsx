@@ -3,13 +3,13 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 import {
-    ActivityIndicator,
-    Button,
-    Card,
-    Paragraph,
-    Text,
-    Title,
-    useTheme,
+  ActivityIndicator,
+  Button,
+  Card,
+  Paragraph,
+  Text,
+  Title,
+  useTheme,
 } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BaseLayout from '../../components/BaseLayout';
@@ -41,7 +41,7 @@ export default function SolicitudDetailScreen() {
     (async () => {
       try {
         const res = await fetch(
-          `http://192.168.0.186:8000/api/solicitudes/${id}/`,
+          `http://192.168.100.104:8000/api/solicitudes/${id}/`,
           { headers: { Authorization: `Bearer ${tokens.access}` } }
         );
         if (!res.ok) throw new Error(await res.text());
@@ -70,7 +70,7 @@ export default function SolicitudDetailScreen() {
     setProcessing(true);
     try {
       const res = await fetch(
-        `http://192.168.0.186:8000/api/solicitudes/${solicitud.id}/aceptar/`,
+        `http://192.168.100.104:8000/api/solicitudes/${solicitud.id}/aceptar/`,
         {
           method: 'POST',
           headers: { Authorization: `Bearer ${tokens?.access}` },
@@ -113,7 +113,7 @@ export default function SolicitudDetailScreen() {
 
   return (
     <BaseLayout title="Detalle Solicitud" back>
-      <View style={[styles.container, { paddingBottom: insets.bottom + 16, backgroundColor: theme.colors.background }]}>  
+      <View style={[styles.container, { paddingBottom: insets.bottom + 16, backgroundColor: theme.colors.background }]}>
         <Card style={[styles.card, { backgroundColor: theme.colors.surface }]} elevation={2}>
           <Card.Content>
             <Title style={{ color: theme.colors.onSurface }}>

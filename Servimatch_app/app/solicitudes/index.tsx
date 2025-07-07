@@ -31,7 +31,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BaseLayout from '../../components/BaseLayout';
 import { useAuth } from '../../context/AuthContext';
 
-const API_BASE_URL = 'http://192.168.0.186:8000';
+const API_BASE_URL = 'http://192.168.100.104:8000';
 
 interface Usuario {
   id: number;
@@ -109,8 +109,8 @@ export default function ListaSolicitudes() {
       const lista: Solicitud[] = Array.isArray(data)
         ? data
         : Array.isArray(data.results)
-        ? data.results
-        : [];
+          ? data.results
+          : [];
 
       const filtradas = lista.filter((s) => s.cliente.usuario.id === userData.id);
       setSolicitudes(filtradas);
@@ -178,69 +178,69 @@ export default function ListaSolicitudes() {
 
   // Swipeable: "Cancelar" button
   const renderRightActions = (
-  _progress: any,
-  dragX: Animated.AnimatedInterpolation<number>,
-  item: Solicitud
-) => {
-  const trans = dragX.interpolate({
-    inputRange: [-100, 0],
-    outputRange: [0, 100],
-    extrapolate: 'clamp',
-  });
+    _progress: any,
+    dragX: Animated.AnimatedInterpolation<number>,
+    item: Solicitud
+  ) => {
+    const trans = dragX.interpolate({
+      inputRange: [-100, 0],
+      outputRange: [0, 100],
+      extrapolate: 'clamp',
+    });
 
-  const handleCancelar = async () => {
-    Alert.alert(
-      'Cancelar Solicitud',
-      '¿Estás seguro de que deseas cancelar esta solicitud?',
-      [
-        { text: 'No', style: 'cancel' },
-        {
-          text: 'Sí',
-          onPress: async () => {
-            try {
-              const res = await fetch(
-                `${API_BASE_URL}/api/solicitudes/${item.id}/cancelar/`,
-                {
-                  method: 'POST',
-                  headers: {
-                    Authorization: `Bearer ${tokens?.access}`,
-                    'Content-Type': 'application/json',
-                  },
+    const handleCancelar = async () => {
+      Alert.alert(
+        'Cancelar Solicitud',
+        '¿Estás seguro de que deseas cancelar esta solicitud?',
+        [
+          { text: 'No', style: 'cancel' },
+          {
+            text: 'Sí',
+            onPress: async () => {
+              try {
+                const res = await fetch(
+                  `${API_BASE_URL}/api/solicitudes/${item.id}/cancelar/`,
+                  {
+                    method: 'POST',
+                    headers: {
+                      Authorization: `Bearer ${tokens?.access}`,
+                      'Content-Type': 'application/json',
+                    },
+                  }
+                );
+
+                if (!res.ok) {
+                  const errorData = await res.json();
+                  throw new Error(errorData.error || 'Error al cancelar');
                 }
-              );
 
-              if (!res.ok) {
-                const errorData = await res.json();
-                throw new Error(errorData.error || 'Error al cancelar');
+                Alert.alert('Éxito', 'Solicitud cancelada correctamente');
+                fetchData(); // Recarga lista
+              } catch (error) {
+                const mensaje = error instanceof Error ? error.message : 'Error desconocido';
+                Alert.alert('Error', mensaje);
               }
-
-              Alert.alert('Éxito', 'Solicitud cancelada correctamente');
-              fetchData(); // Recarga lista
-            } catch (error) {
-              const mensaje = error instanceof Error ? error.message : 'Error desconocido';
-              Alert.alert('Error', mensaje);
-            }
+            },
           },
-        },
-      ]
+        ]
+      );
+    };
+
+
+    return (
+      <Animated.View style={{ transform: [{ translateX: trans }] }}>
+        <Button
+          icon="close-circle-outline"
+          mode="contained"
+          onPress={handleCancelar}
+          style={[styles.swipeButton, { backgroundColor: theme.colors.error }]}
+          labelStyle={{ color: '#fff' }}
+        >
+          Cancelar
+        </Button>
+      </Animated.View>
     );
   };
-
-
-  return (
-    <Animated.View style={{ transform: [{ translateX: trans }] }}>
-      <Button
-        icon="close-circle-outline"
-        mode="contained"
-        onPress={handleCancelar}
-        style={[styles.swipeButton, { backgroundColor: theme.colors.error }]}
-        labelStyle={{ color: '#fff' }}
-      >
-        Cancelar
-      </Button>
-    </Animated.View>
-  );
-};
 
 
   // Separate component for each list item so hooks work correctly
