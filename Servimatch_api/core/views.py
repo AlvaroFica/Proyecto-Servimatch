@@ -35,6 +35,7 @@ from datetime import datetime, timedelta
 import hmac
 import hashlib
 import requests
+import time
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -574,20 +575,22 @@ class IniciarPagoFlowView(APIView):
             if not solicitud:
                 return Response({'error': 'Solicitud no encontrada'}, status=404)
 
+            # 🔁 Generar commerceOrder único para evitar error de duplicado
+            timestamp = int(time.time())
+            commerce_order = f"{solicitud_id}-{timestamp}"
+
             # Parámetros para Flow
             data = {
                 "apiKey": settings.FLOW_API_KEY,
-                "commerceOrder": str(solicitud_id),  # ← agregado
+                "commerceOrder": commerce_order,
                 "subject": "Pago de servicio",
                 "amount": float(monto),
                 "currency": "CLP",
                 "email": request.user.email,
                 "urlReturn": "servimatchapp://pago-exitoso",
 
-                #Cambiar la url cada vez que se inicia ngrok
+                # Cambiar la URL cada vez que se inicia ngrok
                 "urlConfirmation": "https://d3c4-2803-c100-2000-ea46-b5f3-bbd0-2780-d519.ngrok-free.app/api/flow/confirmacion/",
-                ##############################
-
 
                 "optional": f"solicitud_id={solicitud_id}"
             }
