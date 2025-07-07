@@ -37,6 +37,29 @@ const COMUNAS = [
   'San Bernardo',
   'El Bosque',
 ];
+  function validarNombre(nombre: string): string {
+    if (!nombre) return "El nombre es obligatorio.";
+    if (!/^[A-Za-zÁÉÍÓÚÑáéíóúñ\s]+$/.test(nombre)) return "El nombre solo debe contener letras.";
+    return "";
+  }
+
+  function validarApellido(apellido: string): string {
+    if (!apellido) return "El apellido es obligatorio.";
+    if (!/^[A-Za-zÁÉÍÓÚÑáéíóúñ\s]+$/.test(apellido)) return "El apellido solo debe contener letras.";
+    return "";
+  }
+
+  function validarTelefono(telefono: string): string {
+    if (!telefono) return "El teléfono es obligatorio.";
+    if (!/^\+?56\s?9\d{8}$/.test(telefono)) return "Formato incorrecto. Ej: +56912345678";
+    return "";
+  }
+
+  function validarDescripcion(desc: string): string {
+    if (!desc || desc.trim().length < 50) return "La descripción debe tener al menos 50 caracteres.";
+    return "";
+  }
+
 
 export default function CompletarPerfilScreen() {
   const theme = useTheme();
@@ -69,6 +92,14 @@ export default function CompletarPerfilScreen() {
   const [anosExperiencia, setAnosExperiencia] = useState('');
   const [descBreve, setDescBreve] = useState('');
   const [idiomas, setIdiomas] = useState('');
+
+  const [nombreError, setNombreError] = useState('');
+  const [apellidoError, setApellidoError] = useState('');
+  const [telefonoError, setTelefonoError] = useState('');
+  const [descError, setDescError] = useState('');
+  const [descripcionHeight, setDescripcionHeight] = useState(80);
+
+
 
   useEffect(() => {
     if (!tokens?.access) return;
@@ -157,6 +188,18 @@ export default function CompletarPerfilScreen() {
 
   const handleNext = () => {
     if (currentStep === 1) {
+      const errNombre = validarNombre(nombre);
+      const errApellido = validarApellido(apellido);
+      const errTelefono = validarTelefono(telefono);
+      const errDesc = validarDescripcion(descripcion);
+
+      setNombreError(errNombre);
+      setApellidoError(errApellido);
+      setTelefonoError(errTelefono);
+      setDescError(errDesc);
+
+      if (errNombre || errApellido || errTelefono || errDesc) return;
+
       setCurrentStep(2);
     } else if (currentStep === 2) {
       setCurrentStep(3);
@@ -170,6 +213,7 @@ export default function CompletarPerfilScreen() {
       guardarPerfil();
     }
   };
+
 
   const handleBack = () => {
     if (currentStep === 2) {
@@ -207,6 +251,7 @@ export default function CompletarPerfilScreen() {
                   <>
                     <Title style={styles.sectionTitle}>Datos personales</Title>
                     <Surface style={[styles.card, { elevation: 2 }]}>
+
                       <View style={styles.section}>
                         {fotoUri ? (
                           <Avatar.Image size={80} source={{ uri: fotoUri }} />
@@ -224,41 +269,75 @@ export default function CompletarPerfilScreen() {
                         </Button>
                       </View>
 
-                      <TextInput
-                        label="Nombre"
-                        placeholder="Ingresa tu nombre"
-                        value={nombre}
-                        onChangeText={setNombre}
-                        mode="outlined"
-                        style={styles.input}
-                      />
-                      <TextInput
-                        label="Apellido"
-                        placeholder="Ingresa tu apellido"
-                        value={apellido}
-                        onChangeText={setApellido}
-                        mode="outlined"
-                        style={styles.input}
-                      />
-                      <TextInput
-                        label="Teléfono"
-                        placeholder="Ej: +56912345678"
-                        value={telefono}
-                        onChangeText={setTelefono}
-                        keyboardType="phone-pad"
-                        mode="outlined"
-                        style={styles.input}
-                      />
-                      <TextInput
-                        label="Descripción"
-                        placeholder="Cuéntanos sobre ti"
-                        value={descripcion}
-                        onChangeText={setDescripcion}
-                        mode="outlined"
-                        multiline
-                        style={[styles.input, { height: 80 }]}
-                      />
+                        <TextInput
+                          label="Nombre"
+                          placeholder="Ingresa tu nombre"
+                          value={nombre}
+                          onChangeText={(t) => {
+                            setNombre(t);
+                            setNombreError(validarNombre(t));
+                          }}
+                          mode="outlined"
+                          style={styles.input}
+                        />
+                        {nombreError !== '' && <Text style={{ color: 'red', marginBottom: 8 }}>{nombreError}</Text>}
+
+                        <TextInput
+                          label="Apellido"
+                          placeholder="Ingresa tu apellido"
+                          value={apellido}
+                          onChangeText={(t) => {
+                            setApellido(t);
+                            setApellidoError(validarApellido(t));
+                          }}
+                          mode="outlined"
+                          style={styles.input}
+                        />
+                        {apellidoError !== '' && <Text style={{ color: 'red', marginBottom: 8 }}>{apellidoError}</Text>}
+
+                        <TextInput
+                          label="Teléfono"
+                          placeholder="Ej: +56912345678"
+                          value={telefono}
+                          onChangeText={(t) => {
+                            setTelefono(t);
+                            setTelefonoError(validarTelefono(t));
+                          }}
+                          keyboardType="phone-pad"
+                          mode="outlined"
+                          style={styles.input}
+                        />
+                        {telefonoError !== '' && <Text style={{ color: 'red', marginBottom: 8 }}>{telefonoError}</Text>}
+                        <TextInput
+                          label="Descripción"
+                          placeholder="Cuéntanos sobre ti"
+                          value={descripcion}
+                          onChangeText={(t) => {
+                            setDescripcion(t);
+                            setDescError(validarDescripcion(t));
+                          }}
+                          onContentSizeChange={(e) => {
+                            setDescripcionHeight(Math.max(80, e.nativeEvent.contentSize.height));
+                          }}
+                          mode="outlined"
+                          multiline
+                          style={[styles.input, { height: descripcionHeight }]}
+                        />
+                        <Text
+                          style={{
+                            marginBottom: 8,
+                            color: descripcion.length < 50 ? 'red' : 'green',
+                            fontSize: 13,
+                            fontStyle: 'italic',
+                          }}
+                        >
+                          {descripcion.length < 50
+                            ? `Faltan ${50 - descripcion.length} caracteres para el mínimo.`
+                            : '¡Buena descripción! ✔️'}
+                        </Text>
+
                     </Surface>
+
                   </>
                 )}
 
