@@ -23,7 +23,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import paperTheme from './theme';
 
-const API_BASE_URL = 'http://192.168.0.186:8000';
+const API_BASE_URL = 'http://192.168.68.6:8000';
 
 export default function AuthScreen() {
   return (
@@ -41,11 +41,44 @@ function AuthForm() {
   const { setIsLoggedIn, setTokens } = useAuth();
   const router = useRouter();
   const { colors } = useTheme();
+  const [passwordError, setPasswordError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [confirmError, setConfirmError] = useState('');
+  const [emailError, setEmailError] = useState('');
+
+  function validatePassword(p: string): string {
+    const errors = [];
+
+    if (p.length < 8) errors.push('mínimo 8 caracteres');
+    if (!/[A-Z]/.test(p)) errors.push('una mayúscula');
+    if (!/[a-z]/.test(p)) errors.push('una minúscula');
+    if (!/\d/.test(p)) errors.push('un número');
+    if (!/[@$!%*#?&\-_]/.test(p)) errors.push('un símbolo especial');
+
+    return errors.length > 0 ? `Debe incluir ${errors.join(', ')}` : '';
+  }
+
+
+  function validateEmail(email: string): string {
+    const regex = /\S+@\S+\.\S+/;
+    return regex.test(email) ? '' : 'Correo inválido (ej: usuario@ejemplo.com)';
+  }
 
   const handleAction = async () => {
+    if (!email || !password || (!isLoginScreen && !confirmPassword)) {
+      return Alert.alert('Error', 'Completa todos los campos');
+    }
+
     if (!isLoginScreen && password !== confirmPassword) {
       return Alert.alert('Error', 'Las contraseñas no coinciden');
     }
+
+    const error = validatePassword(password);
+    if (error) {
+      setPasswordError(error);
+      return;
+    }
+
 
     const url = isLoginScreen
       ? `${API_BASE_URL}/api/token/`
@@ -61,6 +94,7 @@ function AuthForm() {
           ...(isLoginScreen ? {} : { email, confirm_password: confirmPassword }),
         }),
       });
+
       const data = await response.json();
 
       if (!response.ok) {
@@ -92,24 +126,18 @@ function AuthForm() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.container}
       >
-        {/* Fondo ligero con tu color de marca */}
         <View style={[styles.backgroundOverlay, { backgroundColor: colors.primary + '22' }]} />
 
         <Surface style={[styles.card, { shadowColor: colors.primary }]}>
           <View style={styles.header}>
-            {/* Logo principal */}
             <Image
               source={require('../assets/images/suitcase.png')}
               style={styles.logo}
               resizeMode="contain"
             />
-
-            {/* Nombre de la app */}
             <Title style={[styles.appTitle, { color: colors.primary }]}>
               ServiMatch
             </Title>
-
-            {/* Subtítulo reforzando el propósito */}
             <Text style={[styles.appTagline, { color: colors.secondary }]}>
               Conecta con profesionales cerca de ti
             </Text>
@@ -120,37 +148,85 @@ function AuthForm() {
           <View style={styles.form}>
             <TextInput
               label="Correo electrónico"
-              placeholder="usuario@ejemplo.com"
+              placeholder="Ej: usuario@ejemplo.com"
               value={email}
-              onChangeText={setEmail}
+              onChangeText={(text) => {
+                setEmail(text);
+                const validationMsg = validateEmail(text);
+                setEmailError(validationMsg);
+              }}
               mode="outlined"
               keyboardType="email-address"
               autoCapitalize="none"
               left={<TextInput.Icon icon="email-outline" color={colors.primary} />}
               style={styles.input}
             />
+            {emailError !== '' && (
+              <Text style={{ color: 'red', marginBottom: 8 }}>{emailError}</Text>
+            )}
+
             <TextInput
               label="Contraseña"
-              placeholder="●●●●●●●●"
+              placeholder="Ej: Servi123@"
               value={password}
-              onChangeText={setPassword}
-              secureTextEntry
+              onChangeText={(text) => {
+                setPassword(text);
+                const validationMsg = validatePassword(text);
+                setPasswordError(validationMsg);
+
+                if (!isLoginScreen && confirmPassword !== '' && text !== confirmPassword) {
+                  setConfirmError('Las contraseñas no coinciden');
+                } else {
+                  setConfirmError('');
+                }
+              }}
+              secureTextEntry={!showPassword}
               mode="outlined"
               left={<TextInput.Icon icon="lock-outline" color={colors.primary} />}
+              right={
+                <TextInput.Icon
+                  icon={showPassword ? 'eye-off' : 'eye'}
+                  onPress={() => setShowPassword((prev) => !prev)}
+                />
+              }
               style={styles.input}
             />
-            {!isLoginScreen && (
-              <TextInput
-                label="Repetir contraseña"
-                placeholder="●●●●●●●●"
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                secureTextEntry
-                mode="outlined"
-                left={<TextInput.Icon icon="lock-check-outline" color={colors.primary} />}
-                style={styles.input}
-              />
+            {!isLoginScreen && passwordError !== '' && (
+              <Text style={{ color: 'red', marginBottom: 8 }}>{passwordError}</Text>
             )}
+
+
+            {!isLoginScreen && (
+              <>
+                <TextInput
+                  label="Repetir contraseña"
+                  placeholder="Vuelve a escribir la contraseña"
+                  value={confirmPassword}
+                  onChangeText={(text) => {
+                    setConfirmPassword(text);
+                    if (password !== text) {
+                      setConfirmError('Las contraseñas no coinciden');
+                    } else {
+                      setConfirmError('');
+                    }
+                  }}
+                  secureTextEntry={!showPassword}
+                  mode="outlined"
+                  left={<TextInput.Icon icon="lock-check-outline" color={colors.primary} />}
+                  right={
+                    <TextInput.Icon
+                      icon={showPassword ? 'eye-off' : 'eye'}
+                      onPress={() => setShowPassword((prev) => !prev)}
+                    />
+                  }
+                  style={styles.input}
+                />
+                {confirmError !== '' && (
+                  <Text style={{ color: 'red', marginBottom: 8 }}>{confirmError}</Text>
+                )}
+              </>
+            )}
+
 
             <Button
               mode="contained"
