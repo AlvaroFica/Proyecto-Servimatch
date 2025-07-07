@@ -1,15 +1,54 @@
 // app/configuracion/PoliticasPrivacidad.tsx
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Animated, ScrollView, StyleSheet, View } from 'react-native';
 import {
-    Divider,
-    Surface,
-    Text,
-    Title,
-    useTheme,
+  Divider,
+  Surface,
+  Text,
+  Title,
+  useTheme,
 } from 'react-native-paper';
 import BaseLayout from '../../components/BaseLayout';
+
+// Componente de Card expandible animada
+const ExpandableCard = ({ title, children, theme }: { title: string; children: React.ReactNode; theme: any }) => {
+  const [expanded, setExpanded] = useState(false);
+  const animation = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(animation, {
+      toValue: expanded ? 1 : 0,
+      duration: 350,
+      useNativeDriver: false,
+    }).start();
+  }, [expanded]);
+
+  const maxHeight = animation.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 500], // Ajusta según contenido
+  });
+
+  return (
+    <Surface
+      style={[
+        styles.sectionSurface,
+        { backgroundColor: theme.colors.surface, overflow: 'hidden' },
+      ]}
+    >
+      <Text
+        style={[styles.sectionTitle, { color: theme.colors.primary, marginBottom: 0 }]}
+        onPress={() => setExpanded(prev => !prev)}
+      >
+        {title}
+      </Text>
+      <Divider style={styles.divider} />
+      <Animated.View style={{ maxHeight, opacity: animation }}>
+        {expanded && <View>{children}</View>}
+      </Animated.View>
+    </Surface>
+  );
+};
 
 export default function PoliticasPrivacidadScreen() {
   const theme = useTheme();
@@ -44,37 +83,14 @@ export default function PoliticasPrivacidadScreen() {
             </Title>
           </Surface>
 
-          {/* 1. Introducción */}
-          <Surface
-            style={[
-              styles.sectionSurface,
-              { backgroundColor: theme.colors.surface },
-            ]}
-          >
-            <Title
-              style={[styles.sectionTitle, { color: theme.colors.primary }]}
-            >
-              1. Introducción
-            </Title>
-            <Divider style={styles.divider} />
+          {/* Secciones expandibles */}
+          <ExpandableCard title="1. Introducción" theme={theme}>
             <Text style={[styles.paragraph, { color: theme.colors.onSurface }]}>
               En ServiMatch valoramos tu privacidad y nos comprometemos a proteger la información personal que compartes con nosotros. Esta Política de Privacidad describe cómo recopilamos, usamos y compartimos tus datos cuando utilizas nuestra aplicación móvil.
             </Text>
-          </Surface>
+          </ExpandableCard>
 
-          {/* 2. Información que recopilamos */}
-          <Surface
-            style={[
-              styles.sectionSurface,
-              { backgroundColor: theme.colors.surface },
-            ]}
-          >
-            <Title
-              style={[styles.sectionTitle, { color: theme.colors.primary }]}
-            >
-              2. Información que recopilamos
-            </Title>
-            <Divider style={styles.divider} />
+          <ExpandableCard title="2. Información que recopilamos" theme={theme}>
             <Text style={[styles.paragraph, { color: theme.colors.onSurface }]}>
               2.1 <Text style={styles.boldText}>Datos de Registro:</Text> Cuando creas una cuenta, solicitamos tu nombre completo, correo electrónico, número de teléfono y una contraseña segura.
             </Text>
@@ -90,21 +106,9 @@ export default function PoliticasPrivacidadScreen() {
             <Text style={[styles.paragraph, { color: theme.colors.onSurface }]}>
               2.4 <Text style={styles.boldText}>Datos de Uso:</Text> Recopilamos información técnica sobre tu dispositivo, la versión de la app, registros de inicio de sesión y uso de funcionalidades para mejorar la experiencia y solucionar errores.
             </Text>
-          </Surface>
+          </ExpandableCard>
 
-          {/* 3. Cómo usamos tu información */}
-          <Surface
-            style={[
-              styles.sectionSurface,
-              { backgroundColor: theme.colors.surface },
-            ]}
-          >
-            <Title
-              style={[styles.sectionTitle, { color: theme.colors.primary }]}
-            >
-              3. Cómo usamos tu información
-            </Title>
-            <Divider style={styles.divider} />
+          <ExpandableCard title="3. Cómo usamos tu información" theme={theme}>
             <Text style={[styles.paragraph, { color: theme.colors.onSurface }]}>
               3.1 <Text style={styles.boldText}>Proveer el servicio:</Text> Para permitir que clientes y trabajadores se conecten, procesar solicitudes y gestionar pagos mediante Stripe.
             </Text>
@@ -120,21 +124,9 @@ export default function PoliticasPrivacidadScreen() {
             <Text style={[styles.paragraph, { color: theme.colors.onSurface }]}>
               3.4 <Text style={styles.boldText}>Seguridad:</Text> Monitoreamos actividad sospechosa y protegemos nuestra plataforma de fraudes y accesos no autorizados.
             </Text>
-          </Surface>
+          </ExpandableCard>
 
-          {/* 4. Compartir información */}
-          <Surface
-            style={[
-              styles.sectionSurface,
-              { backgroundColor: theme.colors.surface },
-            ]}
-          >
-            <Title
-              style={[styles.sectionTitle, { color: theme.colors.primary }]}
-            >
-              4. Compartir información
-            </Title>
-            <Divider style={styles.divider} />
+          <ExpandableCard title="4. Compartir información" theme={theme}>
             <Text style={[styles.paragraph, { color: theme.colors.onSurface }]}>
               4.1 <Text style={styles.boldText}>Proveedores de servicios:</Text> Podemos compartir datos con terceros como plataformas de pago (Stripe) y servicios de notificaciones push para cumplir con tus solicitudes.
             </Text>
@@ -146,21 +138,9 @@ export default function PoliticasPrivacidadScreen() {
             <Text style={[styles.paragraph, { color: theme.colors.onSurface }]}>
               4.3 <Text style={styles.boldText}>Transacciones comerciales:</Text> En caso de venta, fusión o reorganización, tus datos podrán ser transferidos al nuevo propietario o entidad sucesora con los mismos términos de privacidad.
             </Text>
-          </Surface>
+          </ExpandableCard>
 
-          {/* 5. Uso de cookies y tecnologías similares */}
-          <Surface
-            style={[
-              styles.sectionSurface,
-              { backgroundColor: theme.colors.surface },
-            ]}
-          >
-            <Title
-              style={[styles.sectionTitle, { color: theme.colors.primary }]}
-            >
-              5. Uso de cookies y tecnologías similares
-            </Title>
-            <Divider style={styles.divider} />
+          <ExpandableCard title="5. Uso de cookies y tecnologías similares" theme={theme}>
             <Text style={[styles.paragraph, { color: theme.colors.onSurface }]}>
               5.1 <Text style={styles.boldText}>Cookies:</Text> Utilizamos cookies y almacenamiento local para guardar preferencias del usuario y mejorar la experiencia de navegación.
             </Text>
@@ -168,39 +148,15 @@ export default function PoliticasPrivacidadScreen() {
             <Text style={[styles.paragraph, { color: theme.colors.onSurface }]}>
               5.2 <Text style={styles.boldText}>SDKs de terceros:</Text> Herramientas analíticas (por ejemplo, Google Analytics) pueden usar cookies para entender el comportamiento del usuario. Estos SDKs tienen sus propias políticas de privacidad.
             </Text>
-          </Surface>
+          </ExpandableCard>
 
-          {/* 6. Seguridad de los datos */}
-          <Surface
-            style={[
-              styles.sectionSurface,
-              { backgroundColor: theme.colors.surface },
-            ]}
-          >
-            <Title
-              style={[styles.sectionTitle, { color: theme.colors.primary }]}
-            >
-              6. Seguridad de los datos
-            </Title>
-            <Divider style={styles.divider} />
+          <ExpandableCard title="6. Seguridad de los datos" theme={theme}>
             <Text style={[styles.paragraph, { color: theme.colors.onSurface }]}>
               Implementamos medidas de seguridad técnicas y organizativas para proteger tu información contra accesos no autorizados, alteraciones o divulgaciones. Sin embargo, ningún método de transmisión por Internet es 100% seguro, por lo que no podemos garantizar seguridad absoluta.
             </Text>
-          </Surface>
+          </ExpandableCard>
 
-          {/* 7. Derechos del usuario */}
-          <Surface
-            style={[
-              styles.sectionSurface,
-              { backgroundColor: theme.colors.surface },
-            ]}
-          >
-            <Title
-              style={[styles.sectionTitle, { color: theme.colors.primary }]}
-            >
-              7. Derechos del usuario
-            </Title>
-            <Divider style={styles.divider} />
+          <ExpandableCard title="7. Derechos del usuario" theme={theme}>
             <Text style={[styles.paragraph, { color: theme.colors.onSurface }]}>
               7.1 <Text style={styles.boldText}>Acceso:</Text> Puedes solicitar una copia de los datos que tenemos sobre ti.
             </Text>
@@ -216,39 +172,15 @@ export default function PoliticasPrivacidadScreen() {
             <Text style={[styles.paragraph, { color: theme.colors.onSurface }]}>
               7.4 <Text style={styles.boldText}>Oposición:</Text> Puedes oponerte al procesamiento de tus datos con fines de marketing directo o perfilado.
             </Text>
-          </Surface>
+          </ExpandableCard>
 
-          {/* 8. Cambios en esta política */}
-          <Surface
-            style={[
-              styles.sectionSurface,
-              { backgroundColor: theme.colors.surface },
-            ]}
-          >
-            <Title
-              style={[styles.sectionTitle, { color: theme.colors.primary }]}
-            >
-              8. Cambios en esta política
-            </Title>
-            <Divider style={styles.divider} />
+          <ExpandableCard title="8. Cambios en esta política" theme={theme}>
             <Text style={[styles.paragraph, { color: theme.colors.onSurface }]}>
               Nos reservamos el derecho de modificar esta Política de Privacidad en cualquier momento. Publicaremos la versión actualizada en la aplicación y, si los cambios son significativos, notificaremos a los usuarios registrados antes de su entrada en vigor.
             </Text>
-          </Surface>
+          </ExpandableCard>
 
-          {/* 9. Contacto */}
-          <Surface
-            style={[
-              styles.sectionSurface,
-              { backgroundColor: theme.colors.surface },
-            ]}
-          >
-            <Title
-              style={[styles.sectionTitle, { color: theme.colors.primary }]}
-            >
-              9. Contacto
-            </Title>
-            <Divider style={styles.divider} />
+          <ExpandableCard title="9. Contacto" theme={theme}>
             <Text style={[styles.paragraph, { color: theme.colors.onSurface }]}>
               Si tienes preguntas sobre esta Política de Privacidad o deseas ejercer alguno de tus derechos, contáctanos:
             </Text>
@@ -264,7 +196,7 @@ export default function PoliticasPrivacidadScreen() {
             <Text style={[styles.paragraph, { color: theme.colors.onSurface }]}>
               <Text style={styles.boldText}>Dirección:</Text> Av. Ejemplo 1234, Santiago, Chile
             </Text>
-          </Surface>
+          </ExpandableCard>
         </Animated.View>
       </ScrollView>
     </BaseLayout>
