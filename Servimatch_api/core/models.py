@@ -24,7 +24,6 @@ class Usuario(AbstractUser):
     telefono = models.CharField(max_length=20, blank=True)
 
     rol = models.CharField(max_length=20, choices=ROL_CHOICES, default='cliente')
-    push_token = models.CharField(max_length=255, blank=True, null=True)
    
     def __str__(self):
         return self.username
@@ -286,3 +285,13 @@ class Mensaje(models.Model):
 
     def __str__(self):
         return f'{self.remitente}: {self.contenido[:30]}'
+
+class Notificacion(models.Model):
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notificaciones')
+    mensaje = models.CharField(max_length=255)
+    leido = models.BooleanField(default=False)
+    tipo = models.CharField(max_length=50, blank=True)  # ejemplo: 'reserva', 'solicitud'
+    fecha = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.usuario.username} - {self.mensaje}"

@@ -385,6 +385,8 @@ class ReservaSerializer(serializers.ModelSerializer):
 
 # ✅ Chat y Mensaje serializers
 from .models import Chat, Mensaje
+from .models import Notificacion
+
 class UsuarioSimpleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usuario
@@ -433,3 +435,8 @@ class ChatSerializer(serializers.ModelSerializer):
 
     def get_no_leidos(self, obj):
         return getattr(obj, 'no_leidos', 0)
+    
+class NotificacionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notificacion
+        fields = '__all__'

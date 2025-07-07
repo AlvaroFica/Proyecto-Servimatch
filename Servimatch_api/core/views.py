@@ -185,11 +185,21 @@ class SolicitudViewSet(viewsets.ModelViewSet):
             loc = geolocator.geocode(ubic)
             if loc:
                 lat, lng = loc.latitude, loc.longitude
-        serializer.save(
+
+        # Guarda la solicitud con cliente y coordenadas
+        solicitud = serializer.save(
             cliente=self.request.user.cliente_profile,
             latitud=lat,
             longitud=lng
         )
+
+        # ✅ Crear notificación interna para el trabajador
+        if solicitud.trabajador_asignado:  # Solo si ya hay un trabajador asignado
+            Notificacion.objects.create(
+                usuario=solicitud.trabajador_asignado.usuario,
+                mensaje=f"Tienes una nueva solicitud de {self.request.user.get_full_name()}",
+                tipo="solicitud"
+            )
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def aceptar(self, request, pk=None):
@@ -265,6 +275,8 @@ class SolicitudViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(cercanas, many=True)
         return Response(serializer.data)
+    
+
 
 
 class PagoViewSet(viewsets.ModelViewSet):
@@ -584,13 +596,16 @@ class MisChatsView(APIView):
         return Response(serializer.data)
 
 
-class GuardarPushTokenView(APIView):
-    permission_classes = [IsAuthenticated]
+class NotificacionViewSet(viewsets.ModelViewSet):
+    serializer_class = NotificacionSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request):
-        token = request.data.get('push_token')
-        if token:
-            request.user.push_token = token
-            request.user.save()
-            return Response({'mensaje': 'Token guardado correctamente'})
-        return Response({'error': 'Token no proporcionado'}, status=400)
+    def get_queryset(self):
+        return Notificacion.objects.filter(usuario=self.request.user).order_by('-fecha')
+
+    @action(detail=False, methods=['post'])
+    def marcar_como_leidas(self, request):
+        Notificacion.objects.filter(usuario=request.user, leido=False).update(leido=True)
+        return Response({'mensaje': 'Notificaciones marcadas como leídas'})
+    
+
