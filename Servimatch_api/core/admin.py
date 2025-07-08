@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Usuario, Cliente, Servicio, Trabajador, Solicitud, Pago, Calificacion, Etiqueta, EtiquetaCalificacion, Profesion, ExperienciaProfesional
+from .models import Usuario, Cliente, Servicio, Trabajador, Solicitud, Pago, Calificacion, Etiqueta, EtiquetaCalificacion, Profesion, ExperienciaProfesional, Notificacion
 
 # Registro básico del modelo Usuario
 @admin.register(Profesion)
@@ -91,7 +91,11 @@ class ReservaAdmin(admin.ModelAdmin):
 
 
 
-
+@admin.register(Notificacion)
+class NotificacionAdmin(admin.ModelAdmin):
+    list_display = ('usuario', 'mensaje', 'tipo', 'leido', 'fecha')
+    search_fields = ('mensaje', 'tipo', 'usuario__username')
+    list_filter = ('leido', 'tipo', 'fecha')
 
 
 
