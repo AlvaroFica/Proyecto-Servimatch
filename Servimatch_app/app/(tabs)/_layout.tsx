@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from 'react-native-paper';
 
@@ -8,9 +8,34 @@ import { HapticTab } from '@/components/HapticTab';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 import CustomTabIcon from '@/components/CustomTabIcon';
 
+import { obtenerNotificaciones } from '@/services/notificaciones';
+import { useAuth } from '@/context/AuthContext';
+
 export default function TabLayout() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+  const { tokens } = useAuth();
+
+  const [notificacionesNoLeidas, setNotificacionesNoLeidas] = useState(0);
+
+  useEffect(() => {
+    if (!tokens?.access) return;
+
+    const fetchNotificaciones = async () => {
+      try {
+        const notificaciones = await obtenerNotificaciones(tokens.access);
+        const noLeidas = notificaciones.filter((n: { leido: boolean }) => !n.leido).length;
+        setNotificacionesNoLeidas(noLeidas);
+      } catch (error) {
+        console.error('Error al obtener notificaciones:', error);
+      }
+    };
+
+    fetchNotificaciones();
+
+    const interval = setInterval(fetchNotificaciones, 4000); // actualizar cada 15 segundos
+    return () => clearInterval(interval);
+  }, [tokens]);
 
   return (
     <Tabs
@@ -26,7 +51,6 @@ export default function TabLayout() {
             backgroundColor: theme.colors.background,
             height: 40 + insets.bottom,
             paddingBottom: insets.bottom > 0 ? insets.bottom : 4,
-
             elevation: 12,
             shadowColor: theme.colors.backdrop,
             shadowOffset: { width: 0, height: 6 },
@@ -36,7 +60,6 @@ export default function TabLayout() {
             borderTopColor: theme.colors.outline,
           },
         ],
-
         tabBarLabelStyle: {
           fontSize: 12,
           marginTop: -5,
@@ -50,6 +73,25 @@ export default function TabLayout() {
           title: 'Inicio',
           tabBarIcon: ({ color, size, focused }) => (
             <CustomTabIcon name="home" color={color} size={size} focused={focused} />
+          ),
+          tabBarItemStyle: styles.tabItem,
+          tabBarActiveBackgroundColor: theme.colors.primary,
+          tabBarInactiveBackgroundColor: 'transparent',
+        }}
+      />
+
+      <Tabs.Screen
+        name="notificaciones"
+        options={{
+          title: 'Notificaciones',
+          tabBarIcon: ({ color, size, focused }) => (
+            <CustomTabIcon
+              name="notifications"
+              color={color}
+              size={size}
+              focused={focused}
+              badgeCount={notificacionesNoLeidas}
+            />
           ),
           tabBarItemStyle: styles.tabItem,
           tabBarActiveBackgroundColor: theme.colors.primary,
@@ -81,7 +123,7 @@ export default function TabLayout() {
               color={color}
               size={24}
               focused={focused}
-              badgeCount={5}
+              badgeCount={5} // Este puede ser dinámico si tienes lógica para él
             />
           ),
           tabBarItemStyle: styles.tabItem,
@@ -94,7 +136,7 @@ export default function TabLayout() {
         name="MapaTrabajadoresScreen"
         options={{
           title: 'Mapa',
-          tabBarItemStyle: { display: 'none' }, // Ocultar sin dejar espacio
+          tabBarItemStyle: { display: 'none' },
         }}
       />
 
@@ -127,22 +169,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  floatingTab: {
-  width: 60,
-  height: 60,
-  borderRadius: 30,
-  backgroundColor: '#fff',
-  justifyContent: 'center',
-  alignItems: 'center',
-  marginBottom: 20,
-  elevation: 8,
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 4 },
-  shadowOpacity: 0.25,
-  shadowRadius: 6,
-  zIndex: 10,
-  position: 'absolute',
-  top: -20, // 🔼 sobresale por encima del tab bar
-},
-
 });

@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Text } from 'react-native';
 import { Button, Card, Paragraph, Title } from 'react-native-paper';
 import { useAuth } from '../../context/AuthContext';
-import { obtenerNotificaciones, marcarComoLeidas } from '../services/notificaciones';
+import { obtenerNotificaciones, marcarComoLeidas } from '../../services/notificaciones';
+import { useFocusEffect } from '@react-navigation/native';
 
 interface Notificacion {
   id: number;
@@ -16,13 +17,23 @@ export default function NotificacionesScreen() {
   const { tokens } = useAuth();
   const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]);
 
-  useEffect(() => {
-    if (tokens?.access) {
-      obtenerNotificaciones(tokens.access).then((data) => {
-        setNotificaciones(data);
-      });
-    }
-  }, []);
+  // Se actualiza automáticamente cada vez que entras a la vista
+  useFocusEffect(
+    useCallback(() => {
+      const fetchNotificaciones = async () => {
+        if (tokens?.access) {
+          try {
+            const data = await obtenerNotificaciones(tokens.access);
+            setNotificaciones(data);
+          } catch (error) {
+            console.error('Error al obtener notificaciones:', error);
+          }
+        }
+      };
+
+      fetchNotificaciones();
+    }, [tokens?.access])
+  );
 
   const handleMarcarLeidas = async () => {
     if (tokens?.access) {

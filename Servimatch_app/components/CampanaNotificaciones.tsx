@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Badge, IconButton } from 'react-native-paper';
 import { useRouter } from 'expo-router';
-import { obtenerNotificaciones } from '../app/services/notificaciones';
+import { obtenerNotificaciones } from '../services/notificaciones';
 import { useAuth } from '../context/AuthContext';
 
 export default function CampanaNotificaciones() {
