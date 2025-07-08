@@ -22,6 +22,8 @@ export default function TabLayout() {
     if (!tokens?.access) return;
 
     const fetchNotificaciones = async () => {
+      if (!tokens?.access) return;
+
       try {
         const notificaciones = await obtenerNotificaciones(tokens.access);
         const noLeidas = notificaciones.filter((n: { leido: boolean }) => !n.leido).length;
@@ -33,9 +35,10 @@ export default function TabLayout() {
 
     fetchNotificaciones();
 
-    const interval = setInterval(fetchNotificaciones, 4000); // actualizar cada 15 segundos
+    const interval = setInterval(fetchNotificaciones, 10000); // cada 10 segundos
     return () => clearInterval(interval);
-  }, [tokens]);
+  }, [tokens?.access]);
+
 
   return (
     <Tabs
