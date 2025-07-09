@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Usuario, Cliente, Servicio, Trabajador, Solicitud, Pago, Calificacion, Etiqueta, EtiquetaCalificacion, Profesion, ExperienciaProfesional
+from .models import Usuario, Cliente, Servicio, Trabajador, Solicitud, Pago, Calificacion, Etiqueta, EtiquetaCalificacion, Profesion, ExperienciaProfesional, PagoServicio
 
 # Registro básico del modelo Usuario
 @admin.register(Profesion)
@@ -88,6 +88,12 @@ class ReservaAdmin(admin.ModelAdmin):
     list_filter = ('estado', 'fecha')
     search_fields = ('cliente__usuario__username', 'plan__nombre')
 
+@admin.register(PagoServicio)
+class PagoServicioAdmin(admin.ModelAdmin):
+    list_display = ('id', 'usuario', 'trabajador', 'plan', 'monto', 'estado', 'fecha', 'flow_order')
+    list_filter = ('estado', 'fecha')
+    search_fields = ('usuario__email', 'trabajador__nombre', 'plan__nombre', 'flow_order')
+    ordering = ('-fecha',)
 
 
 

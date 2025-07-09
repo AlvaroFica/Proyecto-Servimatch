@@ -68,7 +68,7 @@ export default function ConfirmarPagoScreen() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          solicitud_id: plan.id,
+          plan_id: plan.id,
           monto: plan.precio,
         }),
       });

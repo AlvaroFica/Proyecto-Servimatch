@@ -23,7 +23,7 @@ from rest_framework.decorators import api_view, permission_classes
 from django.contrib.auth import get_user_model
 from .models import Trabajador
 import json  # ← asegúrate de tenerlo al inicio del archivo
-
+from django.views.decorators.csrf import csrf_exempt
 
 
 from geopy.geocoders import Nominatim
@@ -560,26 +560,37 @@ class ChatViewSet(viewsets.ViewSet):
 
 
 ##Pasarela de pago FLOW
+import time
+import hmac, hashlib, requests
+from .models import PlanServicio, PagoServicio
+
 class IniciarPagoFlowView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
         try:
-            solicitud_id = request.data.get('solicitud_id')
+            plan_id = request.data.get('plan_id')
             monto = request.data.get('monto')
 
-            if not solicitud_id or not monto:
+            if not plan_id or not monto:
                 return Response({'error': 'Faltan datos'}, status=400)
 
-            solicitud = Solicitud.objects.filter(id=solicitud_id).first()
-            if not solicitud:
-                return Response({'error': 'Solicitud no encontrada'}, status=404)
+            plan = PlanServicio.objects.filter(id=plan_id).first()
+            if not plan:
+                return Response({'error': 'Plan no encontrado'}, status=404)
 
-            # 🔁 Generar commerceOrder único para evitar error de duplicado
-            timestamp = int(time.time())
-            commerce_order = f"{solicitud_id}-{timestamp}"
+            # Crear registro de pago pendiente
+            pago = PagoServicio.objects.create(
+                usuario=request.user,
+                plan=plan,
+                trabajador=plan.trabajador,
+                monto=monto,
+                estado="pendiente"
+            )
 
-            # Parámetros para Flow
+            # commerceOrder único
+            commerce_order = f"pago-{pago.id}"
+
             data = {
                 "apiKey": settings.FLOW_API_KEY,
                 "commerceOrder": commerce_order,
@@ -588,14 +599,11 @@ class IniciarPagoFlowView(APIView):
                 "currency": "CLP",
                 "email": request.user.email,
                 "urlReturn": "servimatchapp://pago-exitoso",
-
-                # Cambiar la URL cada vez que se inicia ngrok
-                "urlConfirmation": "https://d3c4-2803-c100-2000-ea46-b5f3-bbd0-2780-d519.ngrok-free.app/api/flow/confirmacion/",
-
-                "optional": f"solicitud_id={solicitud_id}"
+                "urlConfirmation": "https://https://7a422edea1db.ngrok-free.app/api/flow/confirmacion/",
+                "optional": f"pago_id={pago.id}"
             }
 
-            # Firma HMAC SHA256
+            # Firmar datos
             sorted_keys = sorted(data.keys())
             to_sign = "".join(f"{k}{data[k]}" for k in sorted_keys)
             signature = hmac.new(
@@ -605,13 +613,10 @@ class IniciarPagoFlowView(APIView):
             ).hexdigest()
             data["s"] = signature
 
-            # Enviar solicitud a Flow
             response = requests.post(f"{settings.FLOW_API_URL}/payment/create", data=data)
 
             print(">>> 📤 Payload enviado a Flow:", data)
-            print(">>> 🌐 URL POST:", f"{settings.FLOW_API_URL}/payment/create")
-            print(">>> 🔁 Status:", response.status_code)
-            print(">>> 📥 Respuesta de Flow:", response.text)
+            print(">>> 📥 Respuesta:", response.text)
 
             flow_data = response.json()
 
@@ -623,70 +628,40 @@ class IniciarPagoFlowView(APIView):
 
         except Exception as e:
             return Response({"error": str(e)}, status=500)
+
             
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@csrf_exempt
 def confirmar_pago_flow(request):
     try:
-        # Obtener todos los datos que Flow está enviando
-        data = request.POST.dict()
-        print(">>> 📥 DATOS RECIBIDOS DE FLOW:", data)
-
-        # Extraer firma recibida
-        received_signature = data.pop("s", None)
-        print(">>> 🔐 Firma recibida:", received_signature)
-
-        # Construir string para firmar
-        sorted_keys = sorted(data.keys())
-        to_sign = "".join(f"{k}{data[k]}" for k in sorted_keys)
-        print(">>> 📦 Cadena a firmar:", to_sign)
-
-        # Calcular firma esperada
-        expected_signature = hmac.new(
-            settings.FLOW_SECRET_KEY.encode(),
-            to_sign.encode(),
-            hashlib.sha256
-        ).hexdigest()
-        print(">>> ✅ Firma esperada:", expected_signature)
-
-        if received_signature != expected_signature:
-            print("❌ Firma inválida")
-            return Response({"error": "Firma inválida"}, status=400)
-
-        # Extraer ID de solicitud desde campo 'optional'
+        data = request.data
+        flow_order = data.get("flowOrder")
+        token = data.get("token")
         optional = data.get("optional", "")
-        print(">>> 🧾 Campo optional:", optional)
 
-        solicitud_id = None
-        if optional.startswith("solicitud_id="):
-            solicitud_id = optional.replace("solicitud_id=", "")
+        print(">>> ✅ Confirmación de Flow recibida")
+        print(">>> optional:", optional)
+        print(">>> token:", token)
+        print(">>> flowOrder:", flow_order)
 
-        if not solicitud_id:
-            print("❌ No se encontró solicitud_id")
-            return Response({"error": "No se pudo obtener solicitud_id"}, status=400)
+        # Extraer el ID del pago desde optional
+        pago_id = None
+        if "pago_id=" in optional:
+            pago_id = optional.split("pago_id=")[-1]
 
-        from .models import Solicitud, Pago
+        if pago_id:
+            pago = PagoServicio.objects.filter(id=pago_id).first()
+            if pago:
+                pago.estado = "pagado"
+                pago.flow_order = flow_order
+                pago.flow_token = token
+                pago.save()
+                print(">>> ✅ Pago actualizado correctamente")
+            else:
+                print(">>> ⚠️ Pago no encontrado con ID:", pago_id)
 
-        solicitud = Solicitud.objects.filter(id=solicitud_id).first()
-        if not solicitud:
-            print("❌ Solicitud no encontrada:", solicitud_id)
-            return Response({"error": "Solicitud no encontrada"}, status=404)
-
-        # Crear objeto Pago
-        Pago.objects.create(
-            solicitud=solicitud,
-            monto=solicitud.precio,
-            liberado=False
-        )
-
-        solicitud.estado = 'Aceptada'
-        solicitud.aceptada = True
-        solicitud.save(update_fields=['estado', 'aceptada'])
-
-        print("✅ Pago confirmado y solicitud actualizada")
-        return Response({"status": "ok"})
+        return Response({"msg": "Confirmación procesada"}, status=200)
 
     except Exception as e:
-        import traceback
-        print("❌ Error inesperado:", traceback.format_exc())
+        print(">>> ❌ Error confirmando pago:", str(e))
         return Response({"error": str(e)}, status=500)
