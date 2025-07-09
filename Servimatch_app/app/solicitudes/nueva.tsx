@@ -1,4 +1,3 @@
-// app/solicitudes/nueva.tsx
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import {
@@ -15,7 +14,6 @@ import { useAuth } from '../../context/AuthContext';
 import BaseLayout from '../../components/BaseLayout';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
-
 
 export default function NuevaSolicitudScreen() {
   const { tokens } = useAuth();
@@ -35,32 +33,30 @@ export default function NuevaSolicitudScreen() {
   const [longitud, setLongitud] = useState<number | null>(null);
   const [sugerencias, setSugerencias] = useState<string[]>([]);
   const [typingTimeout, setTypingTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
-  // Estado para el día de la semana (1=Lunes … 7=Domingo)
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
-  // Estado para la hora preferida
   const [selectedTime, setSelectedTime] = useState<Date>(new Date());
-  // Control para mostrar/ocultar el selector de hora
-  const [showTimePicker, setShowTimePicker] = useState(false);    
+  const [showTimePicker, setShowTimePicker] = useState(false);
+
   const geocodificarDireccion = async (direccion: string) => {
-  try {
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(direccion)}&limit=1`,
-      {
-        headers: {
-          'User-Agent': 'ServiMatchApp/1.0 (bas.arenas@duocuc.cl)',
-          'Accept': 'application/json',
-        },
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(direccion)}&limit=1`,
+        {
+          headers: {
+            'User-Agent': 'ServiMatchApp/1.0 (bas.arenas@duocuc.cl)',
+            'Accept': 'application/json',
+          },
+        }
+      );
+      const data = await res.json();
+      if (data.length > 0) {
+        setLatitud(parseFloat(data[0].lat));
+        setLongitud(parseFloat(data[0].lon));
       }
-    );
-    const data = await res.json();
-    if (data.length > 0) {
-      setLatitud(parseFloat(data[0].lat));
-      setLongitud(parseFloat(data[0].lon));
+    } catch (e) {
+      console.error('Error al geocodificar dirección:', e);
     }
-  } catch (e) {
-    console.error('Error al geocodificar dirección:', e);
-  }
-};
+  };
 
   useEffect(() => {
     if (!tokens?.access) return;
@@ -70,12 +66,20 @@ export default function NuevaSolicitudScreen() {
           headers: { Authorization: `Bearer ${tokens.access}` },
         });
         const data = await res.json();
-        setServicios(data);
+
+        if (Array.isArray(data)) {
+          setServicios(data);
+        } else {
+          console.error('Respuesta inesperada de servicios:', data);
+          setServicios([]);
+        }
       } catch (e) {
-        console.error(e);
+        console.error('Error al cargar servicios:', e);
+        setServicios([]);
       }
     })();
   }, [tokens]);
+
 
   const useCurrentLocation = async () => {
     setLocating(true);
@@ -128,20 +132,27 @@ export default function NuevaSolicitudScreen() {
   };
 
   const submit = async () => {
-    if (
-      !nombre ||
-      !descripcion ||
-      !precio ||
-      !selectedService ||
-      !ubicacion ||
-      latitud === null ||
-      longitud === null ||
-      selectedDay === null ||
-      !selectedTime
-    ) 
-  {
-  return Alert.alert('Error', 'Completa todos los campos');
+    const precioNumber = parseFloat(precio);
+
+    if (nombre.trim().length < 5) {
+      return Alert.alert('Error', 'El nombre debe tener al menos 5 caracteres');
     }
+    if (descripcion.trim().length < 30) {
+      return Alert.alert('Error', 'La descripción debe tener al menos 30 caracteres');
+    }
+    if (isNaN(precioNumber) || precioNumber < 0 || precioNumber > 10000000) {
+      return Alert.alert('Error', 'Ingresa un precio válido entre 0 y 10 millones');
+    }
+    if (!selectedService) {
+      return Alert.alert('Error', 'Debes seleccionar un servicio');
+    }
+    if (!ubicacion || latitud === null || longitud === null) {
+      return Alert.alert('Error', 'Indica una ubicación válida');
+    }
+    if (!selectedDay) {
+      return Alert.alert('Error', 'Selecciona un día de la semana');
+    }
+
     setLoading(true);
     try {
       const res = await fetch('http://192.168.1.41:8000/api/solicitudes/', {
@@ -153,13 +164,13 @@ export default function NuevaSolicitudScreen() {
         body: JSON.stringify({
           nombre,
           descripcion,
-          precio: parseFloat(precio),
+          precio: precioNumber,
           ubicacion,
           latitud,
           longitud,
           servicio_id: selectedService,
           dia_semana: selectedDay,
-          hora_preferida: selectedTime.toTimeString().substr(0, 5), // "HH:MM"
+          hora_preferida: selectedTime.toTimeString().substr(0, 5),
         }),
       });
       if (!res.ok) throw new Error(await res.text());
@@ -183,169 +194,155 @@ export default function NuevaSolicitudScreen() {
     );
   }
 
-return (
-  <BaseLayout title="Nueva Solicitud" back>
-    <ScrollView
-      contentContainerStyle={[
-        styles.container,
-        { paddingBottom: insets.bottom + 16, backgroundColor: theme.colors.background },
-      ]}
-    >
-      <TextInput
-        label="Nombre de la solicitud"
-        value={nombre}
-        onChangeText={setNombre}
-        mode="outlined"
-        style={styles.input}
-      />
-      <TextInput
-        label="Descripción del problema"
-        value={descripcion}
-        onChangeText={setDescripcion}
-        mode="outlined"
-        multiline
-        style={[styles.input, { height: 80 }]}
-      />
-      <TextInput
-        label="Precio (CLP)"
-        value={precio}
-        onChangeText={setPrecio}
-        keyboardType="numeric"
-        mode="outlined"
-        style={styles.input}
-      />
-
-      {/* Servicio */}
-      <Text style={[styles.label, { color: theme.colors.onBackground }]}>Servicio</Text>
-      <View style={[styles.pickerContainer, { borderColor: theme.colors.outline }]}>
-        <Picker
-          selectedValue={selectedService}
-          onValueChange={val => setSelectedService(val)}
-        >
-          <Picker.Item label="Selecciona un servicio..." value={null} />
-          {servicios.map(s => (
-            <Picker.Item key={s.id} label={s.nombre} value={s.id} />
-          ))}
-        </Picker>
-      </View>
-
-      {/* Día de la semana */}
-      <Text style={[styles.label, { color: theme.colors.onBackground }]}>Día de la semana</Text>
-      <View style={[styles.pickerContainer, { borderColor: theme.colors.outline }]}>
-        <Picker
-          selectedValue={selectedDay}
-          onValueChange={val => setSelectedDay(val)}
-        >
-          <Picker.Item label="Selecciona un día..." value={null} />
-          <Picker.Item label="Lunes" value={1} />
-          <Picker.Item label="Martes" value={2} />
-          <Picker.Item label="Miércoles" value={3} />
-          <Picker.Item label="Jueves" value={4} />
-          <Picker.Item label="Viernes" value={5} />
-          <Picker.Item label="Sábado" value={6} />
-          <Picker.Item label="Domingo" value={7} />
-        </Picker>
-      </View>
-
-      {/* Hora preferida */}
-      <Text style={[styles.label, { color: theme.colors.onBackground }]}>Hora preferida</Text>
-      <Button
-        mode="outlined"
-        onPress={() => setShowTimePicker(true)}
-        style={styles.input}
+  return (
+    <BaseLayout title="Nueva Solicitud" back>
+      <ScrollView
+        contentContainerStyle={[
+          styles.container,
+          { paddingBottom: insets.bottom + 16, backgroundColor: theme.colors.background },
+        ]}
       >
-        {selectedTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-      </Button>
-      {showTimePicker && (
-        <DateTimePicker
-          value={selectedTime}
-          mode="time"
-          is24Hour
-          display="default"
-          onChange={(_, date) => {
-            setShowTimePicker(false);
-            if (date) setSelectedTime(date);
-          }}
-        />
-      )}
-
-      {/* Ubicación */}
-      <Text style={[styles.label, { color: theme.colors.onBackground }]}>Ubicación</Text>
-      <View style={styles.locationRow}>
         <TextInput
-          label="Ubicación"
-          value={ubicacion}
-          onChangeText={(texto) => {
-            setUbicacion(texto);
-            if (typingTimeout) clearTimeout(typingTimeout);
-            const timeout = setTimeout(() => buscarSugerencias(texto), 500);
-            setTypingTimeout(timeout);
-          }}
+          label="Nombre de la solicitud"
+          value={nombre}
+          onChangeText={setNombre}
           mode="outlined"
-          style={[styles.input, { flex: 1 }]}
+          style={styles.input}
         />
+        <TextInput
+          label="Descripción del problema"
+          value={descripcion}
+          onChangeText={setDescripcion}
+          mode="outlined"
+          multiline
+          style={[styles.input, { height: 80 }]}
+        />
+        <TextInput
+          label="Precio (CLP)"
+          value={precio}
+          onChangeText={setPrecio}
+          keyboardType="numeric"
+          mode="outlined"
+          style={styles.input}
+        />
+
+        <Text style={[styles.label, { color: theme.colors.onBackground }]}>Servicio</Text>
+        <View style={[styles.pickerContainer, { borderColor: theme.colors.outline }]}>
+          <Picker selectedValue={selectedService} onValueChange={val => setSelectedService(val)}>
+            <Picker.Item label="Selecciona un servicio..." value={null} />
+            {servicios.map(s => (
+              <Picker.Item key={s.id} label={s.nombre} value={s.id} />
+            ))}
+          </Picker>
+        </View>
+
+        <Text style={[styles.label, { color: theme.colors.onBackground }]}>Día de la semana</Text>
+        <View style={[styles.pickerContainer, { borderColor: theme.colors.outline }]}>
+          <Picker selectedValue={selectedDay} onValueChange={val => setSelectedDay(val)}>
+            <Picker.Item label="Selecciona un día..." value={null} />
+            <Picker.Item label="Lunes" value={1} />
+            <Picker.Item label="Martes" value={2} />
+            <Picker.Item label="Miércoles" value={3} />
+            <Picker.Item label="Jueves" value={4} />
+            <Picker.Item label="Viernes" value={5} />
+            <Picker.Item label="Sábado" value={6} />
+            <Picker.Item label="Domingo" value={7} />
+          </Picker>
+        </View>
+
+        <Text style={[styles.label, { color: theme.colors.onBackground }]}>Hora preferida</Text>
+        <Button mode="outlined" onPress={() => setShowTimePicker(true)} style={styles.input}>
+          {selectedTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        </Button>
+        {showTimePicker && (
+          <DateTimePicker
+            value={selectedTime}
+            mode="time"
+            is24Hour
+            display="default"
+            onChange={(_, date) => {
+              setShowTimePicker(false);
+              if (date) setSelectedTime(date);
+            }}
+          />
+        )}
+
+        <Text style={[styles.label, { color: theme.colors.onBackground }]}>Ubicación</Text>
+        <View style={styles.locationRow}>
+          <TextInput
+            label="Ubicación"
+            value={ubicacion}
+            onChangeText={(texto) => {
+              setUbicacion(texto);
+              if (typingTimeout) clearTimeout(typingTimeout);
+              const timeout = setTimeout(() => buscarSugerencias(texto), 500);
+              setTypingTimeout(timeout);
+            }}
+            mode="outlined"
+            style={[styles.input, { flex: 1 }]}
+          />
+
+          <Button
+            mode="outlined"
+            onPress={useCurrentLocation}
+            loading={locating}
+            disabled={locating}
+            contentStyle={styles.buttonContent}
+            style={{ marginLeft: 8 }}
+          >
+            Mi ubicación
+          </Button>
+
+          {sugerencias.length > 0 && (
+            <View style={styles.suggestionsContainer}>
+              {ubicacion && (
+                <Button
+                  mode="text"
+                  onPress={async () => {
+                    setUbicacion(ubicacion);
+                    await geocodificarDireccion(ubicacion);
+                    setSugerencias([]);
+                  }}
+                  style={[styles.suggestionItem, { backgroundColor: '#e6f7ff' }]}
+                  contentStyle={{ justifyContent: 'flex-start' }}
+                  labelStyle={{ textAlign: 'left' }}
+                >
+                  📍 Usar ubicación actual: {ubicacion}
+                </Button>
+              )}
+              {sugerencias.map((s, i) => (
+                <Button
+                  key={i}
+                  mode="text"
+                  onPress={async () => {
+                    setUbicacion(s);
+                    await geocodificarDireccion(s);
+                    setSugerencias([]);
+                  }}
+                  style={styles.suggestionItem}
+                  contentStyle={{ justifyContent: 'flex-start' }}
+                  labelStyle={{ textAlign: 'left' }}
+                >
+                  {s}
+                </Button>
+              ))}
+            </View>
+          )}
+        </View>
 
         <Button
-          mode="outlined"
-          onPress={useCurrentLocation}
-          loading={locating}
-          disabled={locating}
+          mode="contained"
+          onPress={submit}
+          loading={loading}
+          disabled={loading}
+          style={[styles.submitBtn, { backgroundColor: theme.colors.primary }]}
           contentStyle={styles.buttonContent}
-          style={{ marginLeft: 8 }}
         >
-          Mi ubicación
+          Crear solicitud
         </Button>
-
-        {sugerencias.length > 0 && (
-          <View style={styles.suggestionsContainer}>
-            {ubicacion && (
-              <Button
-                mode="text"
-                onPress={async () => {
-                  setUbicacion(ubicacion);
-                  await geocodificarDireccion(ubicacion);
-                  setSugerencias([]);
-                }}
-                style={[styles.suggestionItem, { backgroundColor: '#e6f7ff' }]}
-                contentStyle={{ justifyContent: 'flex-start' }}
-                labelStyle={{ textAlign: 'left' }}
-              >
-                📍 Usar ubicación actual: {ubicacion}
-              </Button>
-            )}
-            {sugerencias.map((s, i) => (
-              <Button
-                key={i}
-                mode="text"
-                onPress={async () => {
-                  setUbicacion(s);
-                  await geocodificarDireccion(s);
-                  setSugerencias([]);
-                }}
-                style={styles.suggestionItem}
-                contentStyle={{ justifyContent: 'flex-start' }}
-                labelStyle={{ textAlign: 'left' }}
-              >
-                {s}
-              </Button>
-            ))}
-          </View>
-        )}
-      </View>
-
-      <Button
-        mode="contained"
-        onPress={submit}
-        loading={loading}
-        disabled={loading}
-        style={[styles.submitBtn, { backgroundColor: theme.colors.primary }]}
-        contentStyle={styles.buttonContent}
-      >
-        Crear solicitud
-      </Button>
-    </ScrollView>
-  </BaseLayout>
-);
+      </ScrollView>
+    </BaseLayout>
+  );
 }
 
 const styles = StyleSheet.create({
