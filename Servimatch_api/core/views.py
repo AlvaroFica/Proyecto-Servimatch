@@ -665,3 +665,10 @@ def confirmar_pago_flow(request):
     except Exception as e:
         print(">>> ❌ Error confirmando pago:", str(e))
         return Response({"error": str(e)}, status=500)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def listar_pagos_usuario(request):
+    pagos = PagoServicio.objects.filter(usuario=request.user).order_by('-fecha')
+    serializer = PagoServicioSerializer(pagos, many=True)
+    return Response(serializer.data)

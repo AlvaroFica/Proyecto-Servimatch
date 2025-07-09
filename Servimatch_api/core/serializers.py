@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import (
     Usuario, Cliente, Servicio, Profesion, Trabajador, ExperienciaProfesional,
     FotoTrabajador, Calificacion, Solicitud, Pago, Etiqueta,
-    EtiquetaCalificacion, PlanServicio, Reserva, )
+    EtiquetaCalificacion, PlanServicio, Reserva, PagoServicio )
 from django.db.models import Avg 
 import json   
 
@@ -407,3 +407,21 @@ class ChatSerializer(serializers.ModelSerializer):
     class Meta:
         model = Chat
         fields = ['id', 'cliente', 'trabajador', 'creado']
+
+
+class PagoServicioSerializer(serializers.ModelSerializer):
+    plan = serializers.SerializerMethodField()
+    trabajador = serializers.SerializerMethodField()
+
+    def get_plan(self, obj):
+        return {'nombre': obj.plan.nombre}
+
+    def get_trabajador(self, obj):
+        return {
+            'nombre': obj.trabajador.usuario.nombre,
+            'apellido': obj.trabajador.usuario.apellido,
+        }
+
+    class Meta:
+        model = PagoServicio
+        fields = ['id', 'plan', 'trabajador', 'monto', 'estado', 'fecha']

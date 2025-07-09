@@ -166,10 +166,10 @@ export default function CuentaScreen() {
                 onPress={() => router.push('/solicitudes')}
                 style={styles.listItem}
               />
-              <List.Item                
+              <List.Item
                 title="Historial"
                 left={props => <List.Icon {...props} icon="history" color={theme.colors.primary} />}
-                onPress={() => router.push('./historial')}
+                onPress={() => router.push('/historial')}
                 style={styles.listItem}
               />
               {isTrabajador && (
