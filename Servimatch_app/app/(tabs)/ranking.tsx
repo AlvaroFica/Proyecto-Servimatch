@@ -1,5 +1,3 @@
-// ranking_alternate.tsx
-
 import { Picker } from '@react-native-picker/picker';
 import React, { useEffect, useRef, useState } from 'react';
 import {
@@ -10,12 +8,14 @@ import {
   SafeAreaView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { Avatar, Divider } from 'react-native-paper';
+import { useRouter } from 'expo-router';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const API_BASE_URL = 'https://Recnok.pythonanywhere.com';
+const API_BASE_URL = 'http://192.168.100.9:8000';
 
 interface Profesion {
   id: number;
@@ -32,44 +32,31 @@ interface Worker {
   servicios: number[];
 }
 
-// Dimensiones para las tarjetas Top 3
-const TOP_CARD_WIDTH = SCREEN_WIDTH * 0.3;
-const TOP_CARD_HEIGHT = 220;
+const TOP_CARD_WIDTH = SCREEN_WIDTH * 0.26;
+const TOP_CARD_HEIGHT = 160;
 
-// Componente para pintar estrellas según rating
 const StarRating: React.FC<{ rating: number }> = ({ rating }) => {
   const filledStars = Math.floor(rating);
   return (
     <View style={styles.starsContainer}>
-      {Array.from({ length: 5 }).map((_, i) => {
-        if (i < filledStars) {
-          return (
-            <Text key={i} style={styles.starFilled}>
-              ★
-            </Text>
-          );
-        } else {
-          return (
-            <Text key={i} style={styles.starEmpty}>
-              ☆
-            </Text>
-          );
-        }
-      })}
+      {Array.from({ length: 5 }).map((_, i) => (
+        <Text key={i} style={i < filledStars ? styles.starFilled : styles.starEmpty}>
+          {i < filledStars ? '★' : '☆'}
+        </Text>
+      ))}
     </View>
   );
 };
 
 const RankingScreen: React.FC = () => {
+  const router = useRouter();
+
   const [profesiones, setProfesiones] = useState<Profesion[]>([]);
   const [selectedProfesion, setSelectedProfesion] = useState<string | undefined>(undefined);
   const [workers, setWorkers] = useState<Worker[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-
-  // Animación fade-in/fade-out al filtrar
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
-  // 1) Cargar profesiones para el Picker
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/profesiones/`)
       .then(res => res.json())
@@ -77,21 +64,18 @@ const RankingScreen: React.FC = () => {
       .catch(err => console.error(err));
   }, []);
 
-  // 2) Cargar ranking completo y aplicar filtro con animación
   useEffect(() => {
     setLoading(true);
-    fetch(`${API_BASE_URL}/api/trabajadores/ranking/`)
+    fetch(`${API_BASE_URL}/api/ranking/trabajadores/`)
       .then(res => res.json())
       .then((data: Worker[]) => {
         const applyFilter = () => {
           if (selectedProfesion) {
-            const filtrados = data.filter(w => w.profesion === selectedProfesion);
-            setWorkers(filtrados);
+            setWorkers(data.filter(w => w.profesion === selectedProfesion));
           } else {
             setWorkers(data);
           }
           setLoading(false);
-          // Fade-in
           Animated.timing(fadeAnim, {
             toValue: 1,
             duration: 400,
@@ -99,7 +83,6 @@ const RankingScreen: React.FC = () => {
           }).start();
         };
 
-        // Fade-out y luego filtro
         Animated.timing(fadeAnim, {
           toValue: 0,
           duration: 300,
@@ -109,7 +92,6 @@ const RankingScreen: React.FC = () => {
       .catch(err => console.error(err));
   }, [selectedProfesion]);
 
-  // 3) Dividir en Top 3 y Siguientes 7 (rellenar con null si faltan)
   const getTopAndNext = (list: Worker[]) => {
     const top3: (Worker | null)[] = list.slice(0, 3);
     const next7: (Worker | null)[] = list.slice(3, 10);
@@ -117,27 +99,24 @@ const RankingScreen: React.FC = () => {
     while (next7.length < 7) next7.push(null);
     return { top3, next7 };
   };
+
   const { top3, next7 } = getTopAndNext(workers);
 
-  // 4) Render Top 3
   const renderTopItem = (item: Worker | null, index: number) => {
+    const borderColors = ['#F59E0B', '#6B7280', '#D97706'];
     if (!item) {
-      // Placeholder “Vacante”
       return (
         <View style={styles.topPlaceholder} key={`top-placeholder-${index}`}>
           <Text style={styles.placeholderText}>Vacante</Text>
         </View>
       );
     }
-    // Colores de borde según posición
-    const borderColors = ['#F59E0B', '#6B7280', '#D97706']; // dorado, gris, bronce
     return (
       <View
         style={[
           styles.topCard,
           {
             borderColor: borderColors[index],
-            shadowOpacity: 0.1 + (3 - index) * 0.05, // sombra según posición
             backgroundColor:
               item.rating >= 4.5
                 ? '#ECFDF5'
@@ -148,24 +127,19 @@ const RankingScreen: React.FC = () => {
         ]}
         key={`top-${item.id}`}
       >
-        {/* Sticker de medalla */}
         <View style={[styles.medalBadge, { backgroundColor: borderColors[index] }]}>
           <Text style={styles.medalText}>{index + 1}</Text>
         </View>
         <View style={styles.topCardContent}>
           {item.foto_perfil ? (
-            <Avatar.Image
-              size={64}
-              source={{ uri: item.foto_perfil }}
-              style={styles.topAvatar}
-            />
+            <Avatar.Image size={64} source={{ uri: item.foto_perfil }} style={styles.topAvatar} />
           ) : (
             <Avatar.Icon size={64} icon="account" style={styles.topAvatar} />
           )}
-          <Text style={styles.topNameText} numberOfLines={1} ellipsizeMode="tail">
+          <Text style={styles.topNameText} numberOfLines={1}>
             {item.nombre} {item.apellido}
           </Text>
-          <Text style={styles.topProfessionText} numberOfLines={1} ellipsizeMode="tail">
+          <Text style={styles.topProfessionText} numberOfLines={1}>
             {item.profesion}
           </Text>
           <StarRating rating={item.rating} />
@@ -174,10 +148,8 @@ const RankingScreen: React.FC = () => {
     );
   };
 
-  // 5) Render Siguientes 7 (listas de filas)
   const renderListItem = ({ item, index }: { item: Worker | null; index: number }) => {
     if (!item) {
-      // Placeholder “Vacante”
       return (
         <View style={[styles.listRow, styles.placeholderRow]} key={`list-ph-${index}`}>
           <Text style={styles.placeholderText}>Vacante</Text>
@@ -195,25 +167,20 @@ const RankingScreen: React.FC = () => {
                 : item.rating < 3.0
                 ? '#FEF3F2'
                 : '#FFFFFF',
-            shadowOpacity: 0.05 + (7 - index) * 0.01, // sombra según posición
           },
         ]}
         key={`list-${item.id}`}
       >
         {item.foto_perfil ? (
-          <Avatar.Image
-            size={48}
-            source={{ uri: item.foto_perfil }}
-            style={styles.listAvatar}
-          />
+          <Avatar.Image size={48} source={{ uri: item.foto_perfil }} style={styles.listAvatar} />
         ) : (
           <Avatar.Icon size={48} icon="account" style={styles.listAvatar} />
         )}
         <View style={styles.listTextBlock}>
-          <Text style={styles.listNameText} numberOfLines={1} ellipsizeMode="tail">
+          <Text style={styles.listNameText} numberOfLines={1}>
             {item.nombre} {item.apellido}
           </Text>
-          <Text style={styles.listProfessionText} numberOfLines={1} ellipsizeMode="tail">
+          <Text style={styles.listProfessionText} numberOfLines={1}>
             {item.profesion}
           </Text>
         </View>
@@ -222,7 +189,6 @@ const RankingScreen: React.FC = () => {
     );
   };
 
-  // 6) Mostrar loader mientras carga
   if (loading) {
     return (
       <View style={styles.loaderContainer}>
@@ -233,10 +199,15 @@ const RankingScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Título general */}
-      <Text style={styles.mainTitle}>Ranking</Text>
+      {/* Encabezado tipo notificaciones */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Text style={styles.backButtonText}>◀</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Ranking</Text>
+      </View>
 
-      {/* Picker de Profesión */}
+      {/* Selector de profesiones */}
       <View style={styles.pickerContainer}>
         <Picker
           selectedValue={selectedProfesion}
@@ -251,8 +222,8 @@ const RankingScreen: React.FC = () => {
         </Picker>
       </View>
 
-      {/* Top 3 Destacados */}
       <Text style={styles.sectionTitle}>Top 3 Destacados</Text>
+
       <Animated.View style={[styles.animatedContainer, { opacity: fadeAnim }]}>
         <View style={styles.topContainer}>
           {top3.map((item, idx) => renderTopItem(item, idx))}
@@ -260,13 +231,11 @@ const RankingScreen: React.FC = () => {
 
         <Divider style={styles.divider} />
 
-        {/* Siguientes 7 */}
         <Text style={styles.sectionTitle}>Siguientes 7</Text>
+
         <FlatList
           data={next7}
-          keyExtractor={(item, index) =>
-            item ? `list-${item.id}` : `list-ph-${index}`
-          }
+          keyExtractor={(item, index) => (item ? `list-${item.id}` : `list-ph-${index}`)}
           renderItem={renderListItem}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.listContainer}
@@ -279,191 +248,191 @@ const RankingScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f7fa',
+    backgroundColor: '#f9fafb',
   },
   loaderContainer: {
     flex: 1,
     justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f9fafb',
   },
-
-  // Título general
-  mainTitle: {
-    fontSize: 28,
-    fontWeight: '800',
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
+  backButton: {
+    padding: 4,
+    marginRight: 8,
+  },
+  backButtonText: {
+    fontSize: 20,
+    color: '#333',
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '700',
     color: '#1F2937',
-    textAlign: 'center',
-    marginTop: 12,
-    marginBottom: 8,
   },
-
-  // Picker
   pickerContainer: {
     marginHorizontal: 16,
+    marginTop: 10,
     borderWidth: 1,
-    borderColor: '#d0d3db',
+    borderColor: '#d1d5db',
     borderRadius: 8,
-    marginBottom: 16,
     overflow: 'hidden',
     backgroundColor: '#fff',
-    elevation: 1,
   },
   picker: {
-    height: 48,
+    height: 40,
     width: '100%',
   },
   pickerItem: {
-    fontSize: 14,
+    fontSize: 13,
   },
-
-  // Secciones
   sectionTitle: {
-    fontSize: 22,
+    fontSize: 16,
     marginHorizontal: 16,
-    marginVertical: 12,
-    fontWeight: '700',
+    marginVertical: 8,
+    fontWeight: '600',
     color: '#333',
   },
   divider: {
     marginHorizontal: 16,
-    marginVertical: 20,
-    backgroundColor: '#e0e0e0',
+    marginVertical: 14,
+    backgroundColor: '#e5e7eb',
     height: 1,
   },
-
-  // Contenedor animado con flex:1 para que FlatList pueda scrollear
   animatedContainer: {
     flex: 1,
   },
-
-  // === Top 3 Destacados ===
   topContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginHorizontal: 16,
-    marginBottom: 24,
+    marginHorizontal: 14,
+    marginBottom: 16,
   },
   topCard: {
     width: TOP_CARD_WIDTH,
     height: TOP_CARD_HEIGHT,
-    borderRadius: 16,
-    borderWidth: 2,
-    elevation: 5,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    elevation: 2,
+    backgroundColor: '#fff',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
     position: 'relative',
   },
   topCardContent: {
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingTop: 16,
+    paddingTop: 12,
+    paddingHorizontal: 6,
   },
   topAvatar: {
-    marginBottom: 12,
-    backgroundColor: '#e6eaf2',
+    marginBottom: 8,
+    backgroundColor: '#e5e7eb',
   },
   topNameText: {
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: '600',
     color: '#1F2937',
     textAlign: 'center',
   },
   topProfessionText: {
-    fontSize: 14,
+    fontSize: 11,
     color: '#6B7280',
-    marginTop: 4,
+    marginTop: 2,
     textAlign: 'center',
   },
-
-  // Sticker medalla
   medalBadge: {
     position: 'absolute',
-    top: -6,
-    left: -6,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    top: -4,
+    left: -4,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
   medalText: {
     color: '#fff',
     fontWeight: '700',
+    fontSize: 12,
   },
-
-  // Placeholder Top
   topPlaceholder: {
     width: TOP_CARD_WIDTH,
     height: TOP_CARD_HEIGHT,
-    borderRadius: 16,
-    backgroundColor: '#e0e0e0',
+    borderRadius: 12,
+    backgroundColor: '#f3f4f6',
     justifyContent: 'center',
     alignItems: 'center',
   },
-
-  // Placeholder texto
   placeholderText: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#9CA3AF',
+    textAlign: 'center',
   },
-
-  // === Siguientes 7 ===
   listContainer: {
-    paddingBottom: 100, // espacio extra para que no queden ocultos por la tab
-    paddingHorizontal: 16,
+    paddingBottom: 80,
+    paddingHorizontal: 14,
   },
   listRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 84,
-    marginBottom: 12,
-    borderRadius: 12,
+    height: 68,
+    marginBottom: 8,
+    borderRadius: 10,
     backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#e0e0e0',
-    paddingHorizontal: 16,
-    elevation: 2,
+    borderColor: '#e5e7eb',
+    paddingHorizontal: 12,
+    elevation: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
     shadowRadius: 2,
   },
   listAvatar: {
-    marginRight: 12,
-    backgroundColor: '#e6eaf2',
+    marginRight: 10,
+    backgroundColor: '#e5e7eb',
   },
   listTextBlock: {
     flex: 1,
     justifyContent: 'center',
   },
   listNameText: {
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: '600',
     color: '#1F2937',
   },
   listProfessionText: {
-    fontSize: 13,
+    fontSize: 11,
     color: '#6B7280',
-    marginTop: 2,
+    marginTop: 1,
   },
   placeholderRow: {
     justifyContent: 'center',
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#f3f4f6',
   },
-
-  // Estrellas
   starsContainer: {
     flexDirection: 'row',
-    marginLeft: 12,
+    marginLeft: 8,
   },
   starFilled: {
-    fontSize: 18,
+    fontSize: 14,
     color: '#FBBF24',
-    marginHorizontal: 2,
+    marginHorizontal: 1,
   },
   starEmpty: {
-    fontSize: 18,
+    fontSize: 14,
     color: '#D1D5DB',
-    marginHorizontal: 2,
+    marginHorizontal: 1,
   },
 });
 
