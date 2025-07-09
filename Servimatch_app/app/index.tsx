@@ -28,7 +28,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import paperTheme from './theme';
 
-const API_BASE_URL = 'http://192.168.100.104:8000';
+const API_BASE_URL = 'http://192.168.100.109:8000';
 
 export default function AuthScreen() {
   return (

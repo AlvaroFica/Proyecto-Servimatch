@@ -39,7 +39,7 @@ export default function DetallePlanScreen() {
   const fetchPlan = async () => {
     try {
       const res = await fetch(
-        `http://192.168.100.104:8000/api/planes/${planId}/`,
+        `http://192.168.100.109:8000/api/planes/${planId}/`,
         { headers: { Authorization: `Bearer ${tokens!.access}` } }
       );
       if (!res.ok) throw new Error(await res.text());

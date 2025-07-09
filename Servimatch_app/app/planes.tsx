@@ -23,7 +23,7 @@ import {
 import BaseLayout from '../components/BaseLayout';
 import { useAuth } from '../context/AuthContext';
 
-const API_BASE_URL = 'http://192.168.100.104:8000';
+const API_BASE_URL = 'http://192.168.100.109:8000';
 
 interface Servicio {
   id: number;
