@@ -332,14 +332,39 @@ class PagoSerializer(serializers.ModelSerializer):
         read_only_fields = ['solicitud']
 
 class CalificacionSerializer(serializers.ModelSerializer):
-    cliente = ClienteSerializer(read_only=True)
-    trabajador = TrabajadorSerializer(read_only=True)
-    solicitud = SolicitudSerializer(read_only=True)
+    etiquetas = serializers.ListField(
+        child=serializers.IntegerField(),
+        write_only=True,
+        required=False
+    )
 
     class Meta:
         model = Calificacion
-        fields = ['id', 'cliente', 'trabajador', 'solicitud', 'puntuacion', 'comentario', 'fecha_creacion']
-        read_only_fields = ['cliente', 'trabajador', 'solicitud']
+        fields = [
+            'id',
+            'cliente', 'trabajador', 'solicitud',
+            'puntuacion', 'comentario', 'fecha_creacion',
+            'etiquetas'
+        ]
+        read_only_fields = ['cliente', 'trabajador', 'solicitud', 'fecha_creacion']
+
+    def create(self, validated_data):
+        etiquetas = validated_data.pop('etiquetas', [])
+        calificacion = Calificacion.objects.create(**validated_data)
+
+        for eid in etiquetas:
+            try:
+                etiqueta = Etiqueta.objects.get(id=eid)
+                EtiquetaCalificacion.objects.create(
+                    calificacion=calificacion,
+                    etiqueta=etiqueta
+                )
+            except Etiqueta.DoesNotExist:
+                continue
+
+        return calificacion
+
+
 
 class EtiquetaSerializer(serializers.ModelSerializer):
     class Meta:

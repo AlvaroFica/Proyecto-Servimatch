@@ -277,6 +277,18 @@ class SolicitudViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
     
 
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def no_calificadas(self, request):
+        cliente = request.user.cliente_profile
+
+        # Obtener solicitudes finalizadas del cliente
+        solicitudes = Solicitud.objects.filter(
+            cliente=cliente,
+            estado='Finalizada'
+        ).exclude(calificaciones__isnull=False)  # ya tienen calificación
+
+        serializer = self.get_serializer(solicitudes, many=True)
+        return Response(serializer.data)
 
 
 class PagoViewSet(viewsets.ModelViewSet):
@@ -294,16 +306,16 @@ class CalificacionViewSet(viewsets.ModelViewSet):
         cliente = self.request.user.cliente_profile
         solicitud_id = self.request.data.get('solicitud')
 
-        # Validar duplicado
-        if Calificacion.objects.filter(cliente=cliente, solicitud_id=solicitud_id).exists():
-            raise ValidationError("Ya calificaste esta solicitud.")
-
-        # Obtener solicitud y validar trabajador asignado
-        solicitud = Solicitud.objects.filter(id=solicitud_id).first()
-        if not solicitud:
+        try:
+            solicitud = Solicitud.objects.get(id=solicitud_id)
+        except Solicitud.DoesNotExist:
             raise ValidationError("La solicitud no existe.")
-        if not solicitud.trabajador_asignado:
-            raise ValidationError("La solicitud no tiene un trabajador asignado.")
+
+        if solicitud.estado != 'Finalizada':
+            raise ValidationError("Solo puedes calificar una solicitud finalizada.")
+
+        if Calificacion.objects.filter(cliente=cliente, solicitud=solicitud).exists():
+            raise ValidationError("Ya calificaste esta solicitud.")
 
         trabajador = solicitud.trabajador_asignado
 
@@ -312,6 +324,8 @@ class CalificacionViewSet(viewsets.ModelViewSet):
             trabajador=trabajador,
             solicitud=solicitud
         )
+
+
 
 
 class EtiquetaViewSet(viewsets.ModelViewSet):
@@ -508,10 +522,14 @@ class StripeCancelRedirectView(View):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def top_trabajadores(request):
-    print(">> Entrando al endpoint de ranking")
-    trabajadores = Trabajador.objects.annotate(
-        rating_promedio=Avg('calificaciones_recibidas__puntuacion')
-    ).order_by('-rating_promedio')[:10]
+    print("👉 Entrando al endpoint de ranking")
+
+    trabajadores = (
+        Trabajador.objects
+        .annotate(rating_promedio=Avg('calificaciones_recibidas__puntuacion'))
+        .order_by('-rating_promedio')[:10]
+    )
+
     serializer = TrabajadorSerializer(trabajadores, many=True)
     return Response(serializer.data)
 
@@ -608,4 +626,5 @@ class NotificacionViewSet(viewsets.ModelViewSet):
         Notificacion.objects.filter(usuario=request.user, leido=False).update(leido=True)
         return Response({'mensaje': 'Notificaciones marcadas como leídas'})
     
+
 
