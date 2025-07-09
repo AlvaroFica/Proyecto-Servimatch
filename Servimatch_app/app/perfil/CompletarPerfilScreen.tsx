@@ -98,6 +98,11 @@ export default function CompletarPerfilScreen() {
   const [telefonoError, setTelefonoError] = useState('');
   const [descError, setDescError] = useState('');
   const [descripcionHeight, setDescripcionHeight] = useState(80);
+  const [profesionError, setProfesionError] = useState('');
+  const [anosError, setAnosError] = useState('');
+  const [descBreveError, setDescBreveError] = useState('');
+  const [idiomasError, setIdiomasError] = useState('');
+
 
 
 
@@ -210,8 +215,37 @@ export default function CompletarPerfilScreen() {
         setCurrentStep(4);
       }
     } else if (currentStep === 4) {
+      let hayErrores = false;
+
+      if (!profesionId) {
+        setProfesionError('Selecciona una profesión');
+        hayErrores = true;
+      } else {
+        setProfesionError('');
+      }
+
+      const anos = Number(anosExperiencia);
+      if (!anosExperiencia || isNaN(anos) || anos < 0 || anos > 60) {
+        setAnosError('Ingresa un número válido entre 0 y 60');
+        hayErrores = true;
+      } else {
+        setAnosError('');
+      }
+
+      if (!descBreve || descBreve.trim().length < 10) {
+        setDescBreveError('Debe tener al menos 10 caracteres');
+        hayErrores = true;
+      } else {
+        setDescBreveError('');
+      }
+
+      // (opcional) validación de idiomas si lo deseas más adelante
+
+      if (hayErrores) return;
+
       guardarPerfil();
     }
+
   };
 
 
@@ -412,7 +446,6 @@ export default function CompletarPerfilScreen() {
                     </Surface>
                   </>
                 )}
-
                 {currentStep === 4 && rol !== 'cliente' && (
                   <>
                     <Title style={styles.sectionTitle}>Profesión & Experiencia</Title>
@@ -431,26 +464,59 @@ export default function CompletarPerfilScreen() {
                           ))}
                         </Picker>
                       </Surface>
+                      {profesionError !== '' && (
+                        <Text style={{ color: 'red', marginBottom: 8 }}>{profesionError}</Text>
+                      )}
 
-                      <Title style={[styles.subTitle, { marginTop: 16 }]}>Experiencia</Title>
+                      <Title style={styles.subTitle}>Experiencia</Title>
                       <TextInput
-                        label="Años"
+                        label="Años de experiencia"
                         placeholder="Ej: 5"
                         value={anosExperiencia}
-                        onChangeText={setAnosExperiencia}
+                        onChangeText={(t) => {
+                          setAnosExperiencia(t);
+                          const num = Number(t);
+                          setAnosError(
+                            !t || isNaN(num) || num < 0 || num > 60
+                              ? 'Ingresa un número válido entre 0 y 60'
+                              : ''
+                          );
+                        }}
                         keyboardType="numeric"
                         mode="outlined"
                         style={styles.input}
                       />
+                      {anosError !== '' && (
+                        <Text style={{ color: 'red', marginBottom: 8 }}>{anosError}</Text>
+                      )}
                       <TextInput
                         label="Breve descripción"
                         placeholder="Describe tu experiencia breve"
                         value={descBreve}
-                        onChangeText={setDescBreve}
+                        onChangeText={(t) => {
+                          setDescBreve(t);
+                          const length = t.trim().length;
+                          setDescBreveError(length < 30 ? `Faltan ${30 - length} caracteres para el mínimo.` : '');
+                        }}
+                        onContentSizeChange={(e) => {
+                        }}
                         mode="outlined"
                         multiline
-                        style={[styles.input, { height: 60 }]}
+                        style={[styles.input, { height: 80 }]}
                       />
+                      <Text
+                        style={{
+                          marginBottom: 8,
+                          color: descBreve.trim().length < 50 ? 'red' : 'green',
+                          fontSize: 13,
+                          fontStyle: 'italic',
+                        }}
+                      >
+                        {descBreve.trim().length < 50
+                          ? `Faltan ${50 - descBreve.trim().length} caracteres para el mínimo.`
+                          : '¡Buena descripción! ✔️'}
+                      </Text>
+
                       <TextInput
                         label="Idiomas"
                         placeholder="Ej: Español, Inglés"
@@ -462,7 +528,6 @@ export default function CompletarPerfilScreen() {
                     </Surface>
                   </>
                 )}
-
                 <View style={styles.buttonRow}>
                   {currentStep > 1 && (
                     <Button
