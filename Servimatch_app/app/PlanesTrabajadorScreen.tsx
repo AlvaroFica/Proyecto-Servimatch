@@ -11,7 +11,7 @@ import {
 import { Button, Card, Chip, Paragraph, Title, useTheme } from 'react-native-paper';
 import { useAuth } from '../context/AuthContext';
 
-const API = 'http://192.168.0.186:8000';
+const API = 'http://192.168.1.41:8000';
 
 export default function PlanesTrabajadorScreen() {
   const { tokens } = useAuth();
@@ -32,6 +32,7 @@ export default function PlanesTrabajadorScreen() {
   const [precio, setPrecio] = useState<string>('0');
   const [incluyeInput, setIncluyeInput] = useState('');
   const [incluye, setIncluye] = useState<string[]>([]);
+  const [descripcionError, setDescripcionError] = useState('');
 
   // Carga inicial de planes
   useEffect(() => {
@@ -47,6 +48,11 @@ export default function PlanesTrabajadorScreen() {
     // Validación mínima
     if (!nombre.trim()) return Alert.alert('Debe ingresar el nombre del plan');
     const durStr = `${durHoras.padStart(2, '0')}:00:00`;
+
+    if (descripcion.trim().length < 50) {
+      return Alert.alert('La descripción debe tener al menos 50 caracteres');
+    }
+
 
     fetch(`${API}/api/planes/`, {
       method: 'POST',
@@ -126,10 +132,31 @@ export default function PlanesTrabajadorScreen() {
           <TextInput
             placeholder="Descripción"
             value={descripcion}
-            onChangeText={setDescripcion}
+            onChangeText={(text) => {
+              setDescripcion(text);
+              const len = text.trim().length;
+              setDescripcionError(
+                len < 50 ? `Faltan ${50 - len} caracteres para el mínimo.` : ''
+              );
+            }}
             style={styles.input}
             multiline
           />
+
+          <View style={{ marginBottom: 6 }}>
+            <Paragraph
+              style={{
+                fontSize: 13,
+                color: descripcion.trim().length < 50 ? 'red' : 'green',
+                fontStyle: 'italic',
+              }}
+            >
+              {descripcion.trim().length < 50
+                ? `Faltan ${50 - descripcion.trim().length} caracteres para el mínimo.`
+                : '¡Buena descripción! ✔️'}
+            </Paragraph>
+          </View>
+
           <TextInput
             placeholder="Duración (horas)"
             keyboardType="numeric"

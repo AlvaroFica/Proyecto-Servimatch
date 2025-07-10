@@ -41,7 +41,7 @@ export default function SolicitudDetailScreen() {
     (async () => {
       try {
         const res = await fetch(
-          `http://192.168.0.186:8000/api/solicitudes/${id}/`,
+          `http://192.168.1.41:8000/api/solicitudes/${id}/`,
           { headers: { Authorization: `Bearer ${tokens.access}` } }
         );
         if (!res.ok) throw new Error(await res.text());
@@ -70,7 +70,7 @@ export default function SolicitudDetailScreen() {
     setProcessing(true);
     try {
       const res = await fetch(
-        `http://192.168.0.186:8000/api/solicitudes/${solicitud.id}/aceptar/`,
+        `http://192.168.1.41:8000/api/solicitudes/${solicitud.id}/aceptar/`,
         {
           method: 'POST',
           headers: { Authorization: `Bearer ${tokens?.access}` },
