@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import (
     Usuario, Cliente, Servicio, Profesion, Trabajador, ExperienciaProfesional,
     FotoTrabajador, Calificacion, Solicitud, Pago, Etiqueta,
-    EtiquetaCalificacion, PlanServicio, Reserva, PagoServicio )
+    EtiquetaCalificacion, PlanServicio, Reserva, PagoServicio, PagoSolicitud )
 from django.db.models import Avg 
 import json   
 
@@ -425,3 +425,8 @@ class PagoServicioSerializer(serializers.ModelSerializer):
     class Meta:
         model = PagoServicio
         fields = ['id', 'plan', 'trabajador', 'monto', 'estado', 'fecha']
+
+class PagoSolicitudSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PagoSolicitud
+        fields = '__all__'

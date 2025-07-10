@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
-from .views import ProfesionViewSet, PlanServicioViewSet, ReservaViewSet, CreateCheckoutSessionView, StripeRedirectView, StripeCancelRedirectView, SolicitudViewSet, IniciarPagoFlowView, confirmar_pago_flow, listar_pagos_usuario
+from .views import ProfesionViewSet, PlanServicioViewSet, ReservaViewSet, CreateCheckoutSessionView, StripeRedirectView, StripeCancelRedirectView, SolicitudViewSet, IniciarPagoFlowView, confirmar_pago_flow, listar_pagos_usuario, IniciarPagoSolicitudFlowView, confirmar_pago_solicitud_flow
 from django.conf import settings
 from django.conf.urls.static import static
 from .views import UsuarioViewSet
@@ -48,6 +48,8 @@ urlpatterns = [
     path('usuarios/actualizar-perfil/', views.ActualizarPerfilView.as_view(), name='actualizar-perfil'),
     path('ranking/trabajadores/', views.top_trabajadores, name='top-trabajadores'),
     path('pagos/', listar_pagos_usuario),
+    path('flow/iniciar-pago-solicitud/', IniciarPagoSolicitudFlowView.as_view()),
+    path('flow/confirmacion-solicitud/', confirmar_pago_solicitud_flow),
     path('', include(router.urls)),
 ]
 

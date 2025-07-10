@@ -289,3 +289,22 @@ class PagoServicio(models.Model):
 
     def __str__(self):
         return f'Pago de {self.usuario} a {self.trabajador} por {self.plan}'
+
+class PagoSolicitud(models.Model):
+    ESTADOS = [
+        ('pendiente', 'Pendiente'),
+        ('pagado', 'Pagado'),
+        ('fallido', 'Fallido'),
+    ]
+
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    trabajador = models.ForeignKey('Trabajador', on_delete=models.CASCADE)
+    solicitud = models.OneToOneField('Solicitud', on_delete=models.CASCADE)
+    monto = models.DecimalField(max_digits=10, decimal_places=2)
+    estado = models.CharField(max_length=10, choices=ESTADOS, default='pendiente')
+    flow_order = models.CharField(max_length=100, blank=True, null=True)
+    flow_token = models.CharField(max_length=100, blank=True, null=True)
+    fecha = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Pago solicitud {self.solicitud.id} - {self.estado}"

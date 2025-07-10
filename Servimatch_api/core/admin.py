@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Usuario, Cliente, Servicio, Trabajador, Solicitud, Pago, Calificacion, Etiqueta, EtiquetaCalificacion, Profesion, ExperienciaProfesional, PagoServicio
+from .models import Usuario, Cliente, Servicio, Trabajador, Solicitud, Pago, Calificacion, Etiqueta, EtiquetaCalificacion, Profesion, ExperienciaProfesional, PagoServicio, PagoSolicitud
 
 # Registro básico del modelo Usuario
 @admin.register(Profesion)
@@ -96,7 +96,11 @@ class PagoServicioAdmin(admin.ModelAdmin):
     ordering = ('-fecha',)
 
 
-
+@admin.register(PagoSolicitud)
+class PagoSolicitudAdmin(admin.ModelAdmin):
+    list_display = ('id', 'usuario', 'trabajador', 'solicitud', 'monto', 'estado', 'fecha')
+    list_filter = ('estado',)
+    search_fields = ('usuario__email', 'trabajador__usuario__email')
 
 
 

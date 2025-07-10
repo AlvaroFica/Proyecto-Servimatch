@@ -672,3 +672,122 @@ def listar_pagos_usuario(request):
     pagos = PagoServicio.objects.filter(usuario=request.user).order_by('-fecha')
     serializer = PagoServicioSerializer(pagos, many=True)
     return Response(serializer.data)
+
+
+class IniciarPagoSolicitudFlowView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            solicitud_id = request.data.get('solicitud_id')
+            monto = request.data.get('monto')
+
+            if not solicitud_id or not monto:
+                return Response({'error': 'Faltan datos'}, status=400)
+
+            solicitud = Solicitud.objects.filter(id=solicitud_id).first()
+            if not solicitud:
+                return Response({'error': 'Solicitud no encontrada'}, status=404)
+
+            if solicitud.estado != 'aceptada':
+                return Response({'error': 'La solicitud aún no ha sido aceptada'}, status=400)
+
+            # Crear o actualizar registro en PagoSolicitud
+            pago, _ = PagoSolicitud.objects.get_or_create(
+                solicitud=solicitud,
+                defaults={
+                    'usuario': request.user,
+                    'trabajador': solicitud.trabajador,
+                    'monto': monto,
+                    'estado': 'pendiente',
+                }
+            )
+
+            # Flow payload
+            data = {
+                "apiKey": settings.FLOW_API_KEY,
+                "commerceOrder": f"solicitud-{solicitud.id}",
+                "subject": "Pago de solicitud",
+                "amount": float(monto),
+                "currency": "CLP",
+                "email": request.user.email,
+                "urlReturn": "servimatchapp://pago-exitoso",
+                "urlConfirmation": f"{settings.NGROK_DOMAIN}/api/flow/confirmacion-solicitud/",
+                "optional": f"solicitud_id={solicitud.id}",
+            }
+
+            sorted_keys = sorted(data.keys())
+            to_sign = "".join(f"{k}{data[k]}" for k in sorted_keys)
+            signature = hmac.new(
+                settings.FLOW_SECRET_KEY.encode(),
+                to_sign.encode(),
+                hashlib.sha256
+            ).hexdigest()
+
+            data["s"] = signature
+
+            response = requests.post(f"{settings.FLOW_API_URL}/payment/create", data=data)
+            flow_data = response.json()
+
+            if 'token' in flow_data and 'url' in flow_data:
+                # Guardar token y order
+                pago.flow_token = flow_data['token']
+                pago.flow_order = flow_data.get('flowOrder')
+                pago.save()
+                return Response({"url": f"{flow_data['url']}?token={flow_data['token']}"})
+
+            return Response({'error': flow_data.get('message', 'Error en Flow')}, status=400)
+
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
+
+@csrf_exempt
+def confirmar_pago_solicitud_flow(request):
+    try:
+        if request.method != 'POST':
+            return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+        data = request.body.decode('utf-8')
+        parsed = parse_qs(data)
+        token = parsed.get('token', [None])[0]
+
+        if not token:
+            return JsonResponse({'error': 'Token faltante'}, status=400)
+
+        # Consultar estado de pago
+        consulta_data = {
+            "apiKey": settings.FLOW_API_KEY,
+            "token": token,
+        }
+
+        sorted_keys = sorted(consulta_data.keys())
+        to_sign = "".join(f"{k}{consulta_data[k]}" for k in sorted_keys)
+        signature = hmac.new(
+            settings.FLOW_SECRET_KEY.encode(),
+            to_sign.encode(),
+            hashlib.sha256
+        ).hexdigest()
+        consulta_data["s"] = signature
+
+        response = requests.post(f"{settings.FLOW_API_URL}/payment/getStatus", data=consulta_data)
+        result = response.json()
+
+        if result.get('status') == 1:
+            # Pago exitoso → actualizar
+            pago = PagoSolicitud.objects.filter(flow_token=token).first()
+            if pago:
+                pago.estado = 'pagado'
+                pago.save()
+
+                solicitud = pago.solicitud
+                solicitud.estado = 'en_progreso'
+                solicitud.save()
+
+                return JsonResponse({'status': 'ok'})
+            else:
+                return JsonResponse({'error': 'Pago no encontrado'}, status=404)
+        else:
+            return JsonResponse({'status': 'fallido'})
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
