@@ -30,7 +30,7 @@ export default function CuentaScreen() {
     if (!accessToken) return;
     (async () => {
       try {
-        const res = await fetch('http://192.168.100.9:8000/api/usuarios/me/',
+        const res = await fetch('http://192.168.100.4:8000/api/usuarios/me/',
 
           { headers: { Authorization: `Bearer ${accessToken}` } }
         );
@@ -76,7 +76,7 @@ export default function CuentaScreen() {
   }
 
   const isTrabajador = user?.es_trabajador === true;
-  const avatarUri = user?.foto_perfil ? user.foto_perfil.startsWith('http') ? user.foto_perfil : `http://192.168.100.9:8000${user.foto_perfil}` : null;
+  const avatarUri = user?.foto_perfil ? user.foto_perfil.startsWith('http') ? user.foto_perfil : `http://192.168.100.4:8000${user.foto_perfil}` : null;
 
   return (
     <BaseLayout title="Mi cuenta">

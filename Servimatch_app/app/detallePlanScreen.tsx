@@ -38,7 +38,7 @@ export default function DetallePlanScreen() {
 
   const fetchPlan = async () => {
     try {
-      const res = await fetch(`http://192.168.100.9:8000/api/planes/${planId}/`,
+      const res = await fetch(`http://192.168.100.4:8000/api/planes/${planId}/`,
 
         { headers: { Authorization: `Bearer ${tokens!.access}` } }
       );
@@ -63,7 +63,7 @@ export default function DetallePlanScreen() {
   const handlePayment = (method: 'debito' | 'credito') => {
     // Lógica de pasarela (Stripe/MercadoPago) aquí...
     router.push(
-      `/pago?planId=${planId}&dia=${dia}&horaInicio=${horaInicio}&metodo=${method}`
+      `./pago?planId=${planId}&dia=${dia}&horaInicio=${horaInicio}&metodo=${method}`
     );
   };
 
