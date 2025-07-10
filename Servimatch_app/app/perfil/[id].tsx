@@ -256,25 +256,38 @@ export default function PerfilTrabajadorScreen() {
             > 
               Contratar
             </Button>
+
             <Button
               mode="outlined"
-              onPress={() =>
-                router.push({
-                  pathname: '/chat/[id]',
-                  params: { id: perfil.id.toString() }
-                })
-              }
+              onPress={async () => {
+                try {
+                  const res = await fetch(`${API_BASE_URL}/api/chats/obtener_o_crear/`, {
+                    method: 'POST',
+                    headers: {
+                      'Authorization': `Bearer ${tokens?.access}`,
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ trabajador_id: perfil?.id }),
+                  });
+
+                  const data = await res.json();
+                  if (res.ok) {
+                    router.push(`/chat/${data.chat_id}`);
+                  } else {
+                    Alert.alert('Error', data.error || 'No se pudo iniciar el chat');
+                  }
+                } catch (err) {
+                  console.error(err);
+                  Alert.alert('Error', 'Algo salió mal al iniciar el chat');
+                }
+              }}
               style={[styles.btn, { borderColor: theme.colors.primary }]}
               labelStyle={{ color: theme.colors.primary }}
             >
               Chatear
             </Button>
-
-
-
-
-
           </Card.Actions>
+
         </Card>
 
         <Card style={[styles.galleryCard, { backgroundColor: theme.colors.surface }]} elevation={1}>

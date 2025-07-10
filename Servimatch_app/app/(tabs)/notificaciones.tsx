@@ -1,220 +1,90 @@
-import React, { useEffect, useRef, useState } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  Dimensions,
-  Animated,
-  ActivityIndicator,
-} from 'react-native';
-import { Picker } from '@react-native-picker/picker';
-import { Avatar, Divider } from 'react-native-paper';
+import React, { useEffect, useState } from 'react';
+import { ScrollView, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { Button, Card, Paragraph, Title, useTheme } from 'react-native-paper';
+import { useAuth } from '../../context/AuthContext';
+import { obtenerNotificaciones, marcarComoLeidas } from '../../services/notificaciones';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const API_BASE_URL = 'http://192.168.100.9:8000';
-
-interface Profesion {
+interface Notificacion {
   id: number;
-  nombre: string;
+  mensaje: string;
+  leido: boolean;
+  tipo: string;
+  fecha: string;
 }
 
-interface Worker {
-  id: number;
-  nombre: string;
-  apellido: string;
-  foto_perfil?: string;
-  profesion: string;
-  rating: number;
-  servicios: number[];
-}
+export default function NotificacionesScreen() {
+  const { tokens } = useAuth();
+  const theme = useTheme();
+  const navigation = useNavigation();
+  const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]);
 
-const TOP_CARD_WIDTH = SCREEN_WIDTH * 0.26;
-const TOP_CARD_HEIGHT = 160;
-
-const StarRating: React.FC<{ rating: number }> = ({ rating }) => {
-  const filledStars = Math.floor(rating);
-  return (
-    <View style={styles.starsContainer}>
-      {Array.from({ length: 5 }).map((_, i) => (
-        <Text key={i} style={i < filledStars ? styles.starFilled : styles.starEmpty}>
-          {i < filledStars ? '★' : '☆'}
-        </Text>
-      ))}
-    </View>
-  );
-};
-
-export default function RankingScreen() {
-  const router = useRouter();
-  const [profesiones, setProfesiones] = useState<Profesion[]>([]);
-  const [selectedProfesion, setSelectedProfesion] = useState<string | undefined>();
-  const [workers, setWorkers] = useState<Worker[]>([]);
-  const [loading, setLoading] = useState(true);
-  const fadeAnim = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    fetch(`${API_BASE_URL}/api/profesiones/`)
-      .then(res => res.json())
-      .then(setProfesiones)
-      .catch(console.error);
-  }, []);
-
-  useEffect(() => {
-    setLoading(true);
-    fetch(`${API_BASE_URL}/api/ranking/trabajadores/`)
-      .then(res => res.json())
-      .then((data: Worker[]) => {
-        const applyFilter = () => {
-          const filtrados = selectedProfesion
-            ? data.filter(w => w.profesion === selectedProfesion)
-            : data;
-          setWorkers(filtrados);
-          setLoading(false);
-          Animated.timing(fadeAnim, {
-            toValue: 1,
-            duration: 400,
-            useNativeDriver: true,
-          }).start();
-        };
-        Animated.timing(fadeAnim, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }).start(() => applyFilter());
-      })
-      .catch(console.error);
-  }, [selectedProfesion]);
-
-  const getTopAndNext = (list: Worker[]) => {
-    const top3: (Worker | null)[] = list.slice(0, 3);
-    const next7: (Worker | null)[] = list.slice(3, 10);
-    while (top3.length < 3) top3.push(null);
-    while (next7.length < 7) next7.push(null);
-    return { top3, next7 };
+  const fetchNotificaciones = async () => {
+    if (tokens?.access) {
+      const data = await obtenerNotificaciones(tokens.access);
+      setNotificaciones(data);
+    }
   };
 
-  const { top3, next7 } = getTopAndNext(workers);
+  useEffect(() => {
+    fetchNotificaciones();
+  }, []);
 
-  if (loading) {
-    return (
-      <View style={styles.loaderContainer}>
-        <ActivityIndicator size="large" color="#2F80ED" />
-      </View>
-    );
-  }
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchNotificaciones();
+    }, [])
+  );
+
+  const handleMarcarLeidas = async () => {
+    if (tokens?.access) {
+      await marcarComoLeidas(tokens.access);
+      const actualizadas = notificaciones.map((n) => ({ ...n, leido: true }));
+      setNotificaciones(actualizadas);
+    }
+  };
 
   return (
     <>
-      {/* Encabezado tipo Notificaciones */}
+      {/* Barra superior */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={22} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Ranking</Text>
+        <Text style={styles.headerTitle}>Notificaciones</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={selectedProfesion}
-            onValueChange={(value: string) => setSelectedProfesion(value)}
-            style={styles.picker}
-            itemStyle={styles.pickerItem}
-          >
-            <Picker.Item label="Todas las profesiones" value={undefined} />
-            {profesiones.map(p => (
-              <Picker.Item key={p.id} label={p.nombre} value={p.nombre} />
-            ))}
-          </Picker>
-        </View>
+        <Button
+          mode="contained"
+          onPress={handleMarcarLeidas}
+          style={styles.boton}
+          buttonColor="#00696E"
+          labelStyle={{ color: '#fff', fontWeight: 'bold' }}
+        >
+          Marcar todas como leídas
+        </Button>
 
-        <Text style={styles.sectionTitle}>Top 3 Destacados</Text>
-        <View style={styles.topContainer}>
-          {top3.map((item, index) => (
-            <View
-              key={index}
-              style={[
-                styles.topCard,
-                {
-                  borderColor: ['#F59E0B', '#6B7280', '#D97706'][index],
-                  backgroundColor: item
-                    ? item.rating >= 4.5
-                      ? '#ECFDF5'
-                      : item.rating < 3.0
-                      ? '#FEF3F2'
-                      : '#fff'
-                    : '#f3f4f6',
-                },
-              ]}
-            >
-              {item ? (
-                <>
-                  <View
-                    style={[
-                      styles.medalBadge,
-                      { backgroundColor: ['#F59E0B', '#6B7280', '#D97706'][index] },
-                    ]}
-                  >
-                    <Text style={styles.medalText}>{index + 1}</Text>
-                  </View>
-                  <View style={styles.topCardContent}>
-                    {item.foto_perfil ? (
-                      <Avatar.Image size={48} source={{ uri: item.foto_perfil }} />
-                    ) : (
-                      <Avatar.Icon size={48} icon="account" />
-                    )}
-                    <Text style={styles.topNameText}>{item.nombre} {item.apellido}</Text>
-                    <Text style={styles.topProfessionText}>{item.profesion}</Text>
-                    <StarRating rating={item.rating} />
-                  </View>
-                </>
-              ) : (
-                <Text style={styles.placeholderText}>Vacante</Text>
-              )}
-            </View>
-          ))}
-        </View>
+        {notificaciones.length === 0 ? (
+          <Text style={styles.vacio}>No hay notificaciones.</Text>
+        ) : (
+          notificaciones.map((n, i) => (
+            <Card key={i} style={[styles.card, !n.leido && styles.noLeido]}>
+              <Card.Content>
+                <Title style={styles.notifTitulo}>Notificación</Title>
+                <Paragraph>{n.mensaje}</Paragraph>
+                <Text style={styles.fecha}>{new Date(n.fecha).toLocaleString()}</Text>
 
-        <Divider style={styles.divider} />
-        <Text style={styles.sectionTitle}>Siguientes 7</Text>
-        {next7.map((item, index) => (
-          <View
-            key={index}
-            style={[
-              styles.listRow,
-              {
-                backgroundColor: item
-                  ? item.rating >= 4.5
-                    ? '#ECFDF5'
-                    : item.rating < 3.0
-                    ? '#FEF3F2'
-                    : '#fff'
-                  : '#f3f4f6',
-              },
-            ]}
-          >
-            {item ? (
-              <>
-                {item.foto_perfil ? (
-                  <Avatar.Image size={40} source={{ uri: item.foto_perfil }} />
-                ) : (
-                  <Avatar.Icon size={40} icon="account" />
-                )}
-                <View style={styles.listTextBlock}>
-                  <Text style={styles.listNameText}>{item.nombre} {item.apellido}</Text>
-                  <Text style={styles.listProfessionText}>{item.profesion}</Text>
+                <View style={styles.badgeWrapper}>
+                  <Text style={styles.badge}>{n.tipo}</Text>
                 </View>
-                <StarRating rating={item.rating} />
-              </>
-            ) : (
-              <Text style={styles.placeholderText}>Vacante</Text>
-            )}
-          </View>
-        ))}
+              </Card.Content>
+            </Card>
+          ))
+        )}
+
+        <View style={{ height: 60 }} />
       </ScrollView>
     </>
   );
@@ -239,115 +109,46 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 100,
   },
-  pickerContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    overflow: 'hidden',
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#d1d5db',
+  vacio: {
+    textAlign: 'center',
+    marginTop: 16,
+    color: 'gray',
   },
-  picker: {
-    height: 40,
-    width: '100%',
-  },
-  pickerItem: {
-    fontSize: 13,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#222',
-    marginVertical: 8,
-  },
-  topContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  boton: {
     marginBottom: 16,
+    borderRadius: 24,
   },
-  topCard: {
-    width: TOP_CARD_WIDTH,
-    height: TOP_CARD_HEIGHT,
+  card: {
+    marginBottom: 12,
     borderRadius: 12,
-    borderWidth: 1.5,
-    padding: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
+    elevation: 2,
   },
-  topCardContent: {
-    alignItems: 'center',
+  noLeido: {
+    backgroundColor: '#e0f7fa',
   },
-  topNameText: {
+  fecha: {
+    marginTop: 8,
     fontSize: 12,
-    fontWeight: '600',
-    textAlign: 'center',
+    color: 'gray',
   },
-  topProfessionText: {
-    fontSize: 11,
-    color: '#6B7280',
-    textAlign: 'center',
-  },
-  medalBadge: {
+  badgeWrapper: {
     position: 'absolute',
-    top: -6,
-    left: -6,
-    width: 24,
-    height: 24,
+    top: 12,
+    right: 12,
+    backgroundColor: '#00696E',
+    paddingVertical: 2,
+    paddingHorizontal: 8,
     borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
-  medalText: {
-    color: '#fff',
-    fontWeight: 'bold',
+  badge: {
+    color: 'white',
     fontSize: 12,
+    fontWeight: 'bold',
   },
-  placeholderText: {
-    fontSize: 14,
-    color: '#9CA3AF',
-    textAlign: 'center',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#d1d5db',
-    marginVertical: 12,
-  },
-  listRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    marginBottom: 10,
-  },
-  listTextBlock: {
-    flex: 1,
-    marginLeft: 10,
-  },
-  listNameText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  listProfessionText: {
-    fontSize: 11,
-    color: '#6B7280',
-  },
-  starsContainer: {
-    flexDirection: 'row',
-    marginTop: 4,
-  },
-  starFilled: {
-    fontSize: 14,
-    color: '#FBBF24',
-  },
-  starEmpty: {
-    fontSize: 14,
-    color: '#D1D5DB',
-  },
-  loaderContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+  notifTitulo: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#222',
+    marginBottom: 4,
   },
 });
