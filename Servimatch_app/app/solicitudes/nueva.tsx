@@ -7,6 +7,8 @@ import {
   ActivityIndicator,
   useTheme,
   Text,
+  Surface,
+  ProgressBar, // <-- Añadido
 } from 'react-native-paper';
 import { Picker } from '@react-native-picker/picker';
 import * as Location from 'expo-location';
@@ -190,110 +192,98 @@ export default function NuevaSolicitudScreen() {
           { paddingBottom: insets.bottom + 16, backgroundColor: theme.colors.background },
         ]}
       >
-        <TextInput
-          label="Nombre de la solicitud"
-          value={nombre}
-          onChangeText={setNombre}
-          mode="outlined"
-          style={styles.input}
-        />
-        <TextInput
-          label="Descripción del problema"
-          value={descripcion}
-          onChangeText={setDescripcion}
-          mode="outlined"
-          multiline
-          style={[styles.input, { height: 80 }]}
-        />
-        <TextInput
-          label="Precio (CLP)"
-          value={precio}
-          onChangeText={setPrecio}
-          keyboardType="numeric"
-          mode="outlined"
-          style={styles.input}
-        />
-
-        {/* Servicio */}
-        <Text style={[styles.label, { color: theme.colors.onBackground }]}>Servicio</Text>
-        <View style={[styles.pickerContainer, { borderColor: theme.colors.outline }]}>
-          <Picker
-            selectedValue={selectedService}
-            onValueChange={val => setSelectedService(val)}
-          >
-            <Picker.Item label="Selecciona un servicio..." value={null} />
-            {servicios.map(s => (
-              <Picker.Item key={s.id} label={s.nombre} value={s.id} />
-            ))}
-          </Picker>
-        </View>
-
-        {/* Día de la semana */}
-        <Text style={[styles.label, { color: theme.colors.onBackground }]}>Día de la semana</Text>
-        <View style={[styles.pickerContainer, { borderColor: theme.colors.outline }]}>
-          <Picker
-            selectedValue={selectedDay}
-            onValueChange={val => setSelectedDay(val)}
-          >
-            <Picker.Item label="Selecciona un día..." value={null} />
-            <Picker.Item label="Lunes" value={1} />
-            <Picker.Item label="Martes" value={2} />
-            <Picker.Item label="Miércoles" value={3} />
-            <Picker.Item label="Jueves" value={4} />
-            <Picker.Item label="Viernes" value={5} />
-            <Picker.Item label="Sábado" value={6} />
-            <Picker.Item label="Domingo" value={7} />
-          </Picker>
-        </View>
-
-        {/* Hora preferida */}
-        <Text style={[styles.label, { color: theme.colors.onBackground }]}>Hora preferida</Text>
-        <Button
-          mode="outlined"
-          onPress={() => setShowTimePicker(true)}
-          style={styles.input}
-        >
-          {selectedTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-        </Button>
-        {showTimePicker && (
-          <DateTimePicker
-            value={selectedTime}
-            mode="time"
-            is24Hour
-            display="default"
-            onChange={(_, date) => {
-              setShowTimePicker(false);
-              if (date) setSelectedTime(date);
-            }}
-          />
-        )}
-
-        {/* Ubicación */}
-        <Text style={[styles.label, { color: theme.colors.onBackground }]}>Ubicación</Text>
-        <View style={styles.locationRow}>
+        <Surface style={[styles.card, { backgroundColor: theme.colors.elevation.level1 }]}>
+          {/* Inputs dentro de tarjeta */}
           <TextInput
-            label="Ubicación"
-            value={ubicacion}
-            onChangeText={(texto) => {
-              setUbicacion(texto);
-              if (typingTimeout) clearTimeout(typingTimeout);
-              const timeout = setTimeout(() => buscarSugerencias(texto), 500);
-              setTypingTimeout(timeout);
-            }}
+            label="Nombre de la solicitud"
+            value={nombre}
+            onChangeText={setNombre}
             mode="outlined"
-            style={[styles.input, { flex: 1 }]}
+            style={styles.input}
+          />
+          <TextInput
+            label="Descripción del problema"
+            value={descripcion}
+            onChangeText={setDescripcion}
+            mode="outlined"
+            multiline
+            style={[styles.input, { height: 80 }]}
+          />
+          <TextInput
+            label="Precio (CLP)"
+            value={precio}
+            onChangeText={setPrecio}
+            keyboardType="numeric"
+            mode="outlined"
+            style={styles.input}
           />
 
-          <Button
-            mode="outlined"
-            onPress={useCurrentLocation}
-            loading={locating}
-            disabled={locating}
-            contentStyle={styles.buttonContent}
-            style={{ marginLeft: 8 }}
-          >
-            Mi ubicación
+          <Text style={[styles.label, { color: theme.colors.onBackground }]}>Servicio</Text>
+          <View style={[styles.pickerContainer, { borderColor: theme.colors.outline }]}>
+            <Picker selectedValue={selectedService} onValueChange={val => setSelectedService(val)}>
+              <Picker.Item label="Selecciona un servicio..." value={null} />
+              {servicios.map(s => (
+                <Picker.Item key={s.id} label={s.nombre} value={s.id} />
+              ))}
+            </Picker>
+          </View>
+
+          <Text style={[styles.label, { color: theme.colors.onBackground }]}>Día de la semana</Text>
+          <View style={[styles.pickerContainer, { borderColor: theme.colors.outline }]}>
+            <Picker selectedValue={selectedDay} onValueChange={val => setSelectedDay(val)}>
+              <Picker.Item label="Selecciona un día..." value={null} />
+              <Picker.Item label="Lunes" value={1} />
+              <Picker.Item label="Martes" value={2} />
+              <Picker.Item label="Miércoles" value={3} />
+              <Picker.Item label="Jueves" value={4} />
+              <Picker.Item label="Viernes" value={5} />
+              <Picker.Item label="Sábado" value={6} />
+              <Picker.Item label="Domingo" value={7} />
+            </Picker>
+          </View>
+
+          <Text style={[styles.label, { color: theme.colors.onBackground }]}>Hora preferida</Text>
+          <Button mode="outlined" onPress={() => setShowTimePicker(true)} style={styles.input}>
+            {selectedTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </Button>
+          {showTimePicker && (
+            <DateTimePicker
+              value={selectedTime}
+              mode="time"
+              is24Hour
+              display="default"
+              onChange={(_, date) => {
+                setShowTimePicker(false);
+                if (date) setSelectedTime(date);
+              }}
+            />
+          )}
+
+          <Text style={[styles.label, { color: theme.colors.onBackground }]}>Ubicación</Text>
+          <View style={styles.locationRow}>
+            <TextInput
+              label="Ubicación"
+              value={ubicacion}
+              onChangeText={(texto) => {
+                setUbicacion(texto);
+                if (typingTimeout) clearTimeout(typingTimeout);
+                const timeout = setTimeout(() => buscarSugerencias(texto), 500);
+                setTypingTimeout(timeout);
+              }}
+              mode="outlined"
+              style={[styles.input, { flex: 1 }]}
+            />
+            <Button
+              mode="outlined"
+              onPress={useCurrentLocation}
+              loading={locating}
+              disabled={locating}
+              contentStyle={styles.buttonContent}
+              style={{ marginLeft: 8 }}
+            >
+              Mi ubicación
+            </Button>
+          </View>
 
           {sugerencias.length > 0 && (
             <View style={styles.suggestionsContainer}>
@@ -330,18 +320,33 @@ export default function NuevaSolicitudScreen() {
               ))}
             </View>
           )}
-        </View>
 
-        <Button
-          mode="contained"
-          onPress={submit}
-          loading={loading}
-          disabled={loading}
-          style={[styles.submitBtn, { backgroundColor: theme.colors.primary }]}
-          contentStyle={styles.buttonContent}
-        >
-          Crear solicitud
-        </Button>
+          {loading && (
+            <ProgressBar
+              indeterminate
+              color={theme.colors.primary}
+              style={{ marginTop: 8, marginBottom: 16, borderRadius: 4 }}
+            />
+          )}
+          {loading && (
+            <ProgressBar
+              indeterminate
+              color={theme.colors.primary}
+              style={{ marginTop: 8, marginBottom: 16, borderRadius: 4 }}
+            />
+          )}
+
+          <Button
+            mode="contained"
+            onPress={submit}
+            loading={loading}
+            disabled={loading}
+            style={styles.submitBtnCentered}
+            contentStyle={styles.buttonContent}
+          >
+            Crear solicitud
+          </Button>
+        </Surface>
       </ScrollView>
     </BaseLayout>
   );
@@ -363,6 +368,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   submitBtn: { marginTop: 24, borderRadius: 8 },
+  submitBtnCentered: {
+    marginTop: 24,
+    borderRadius: 8,
+    alignSelf: 'center',
+    width: '60%',
+  },
   buttonContent: { height: 48 },
   suggestionItem: {
     paddingVertical: 8,
@@ -379,5 +390,11 @@ const styles = StyleSheet.create({
     zIndex: 999,
     top: 60,
     width: '100%',
+  },
+  card: {
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+    elevation: 2,
   },
 });

@@ -36,26 +36,21 @@ interface Worker {
 const TOP_CARD_WIDTH = SCREEN_WIDTH * 0.3;
 const TOP_CARD_HEIGHT = 220;
 
+// Colores de ranking estilo olímpico: Oro, Plata, Bronce
+const RANK_COLORS = ['#FFD700', '#C0C0C0', '#CD7F32'];
+// Colores de fondo suaves correspondientes para resaltar sin opacar el borde (más sutiles)
+const RANK_BG_COLORS = ['#FFFAE5', '#F5F6F7', '#F7E8D5'];
+
 // Componente para pintar estrellas según rating
 const StarRating: React.FC<{ rating: number }> = ({ rating }) => {
   const filledStars = Math.floor(rating);
   return (
     <View style={styles.starsContainer}>
-      {Array.from({ length: 5 }).map((_, i) => {
-        if (i < filledStars) {
-          return (
-            <Text key={i} style={styles.starFilled}>
-              ★
-            </Text>
-          );
-        } else {
-          return (
-            <Text key={i} style={styles.starEmpty}>
-              ☆
-            </Text>
-          );
-        }
-      })}
+      {Array.from({ length: 5 }).map((_, i) => (
+        <Text key={i} style={i < filledStars ? styles.starFilled : styles.starEmpty}>
+          {i < filledStars ? '★' : '☆'}
+        </Text>
+      ))}
     </View>
   );
 };
@@ -122,43 +117,31 @@ const RankingScreen: React.FC = () => {
   // 4) Render Top 3
   const renderTopItem = (item: Worker | null, index: number) => {
     if (!item) {
-      // Placeholder “Vacante”
       return (
         <View style={styles.topPlaceholder} key={`top-placeholder-${index}`}>
           <Text style={styles.placeholderText}>Vacante</Text>
         </View>
       );
     }
-    // Colores de borde según posición
-    const borderColors = ['#F59E0B', '#6B7280', '#D97706']; // dorado, gris, bronce
     return (
       <View
         style={[
           styles.topCard,
           {
-            borderColor: borderColors[index],
-            shadowOpacity: 0.1 + (3 - index) * 0.05, // sombra según posición
-            backgroundColor:
-              item.rating >= 4.5
-                ? '#ECFDF5'
-                : item.rating < 3.0
-                ? '#FEF3F2'
-                : '#FFFFFF',
+            borderColor: RANK_COLORS[index],
+            backgroundColor: RANK_BG_COLORS[index],
+            shadowOpacity: 0.1 + (3 - index) * 0.05,
           },
         ]}
         key={`top-${item.id}`}
       >
-        {/* Sticker de medalla */}
-        <View style={[styles.medalBadge, { backgroundColor: borderColors[index] }]}>
+        {/* Medalla */}
+        <View style={[styles.medalBadge, { backgroundColor: RANK_COLORS[index] }]}>
           <Text style={styles.medalText}>{index + 1}</Text>
         </View>
         <View style={styles.topCardContent}>
           {item.foto_perfil ? (
-            <Avatar.Image
-              size={64}
-              source={{ uri: item.foto_perfil }}
-              style={styles.topAvatar}
-            />
+            <Avatar.Image size={64} source={{ uri: item.foto_perfil }} style={styles.topAvatar} />
           ) : (
             <Avatar.Icon size={64} icon="account" style={styles.topAvatar} />
           )}
@@ -170,14 +153,18 @@ const RankingScreen: React.FC = () => {
           </Text>
           <StarRating rating={item.rating} />
         </View>
+        {/* Borde extra para resaltar */}
+        <View
+          pointerEvents="none"
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 16, borderWidth: 2, borderColor: RANK_COLORS[index], zIndex: 1 }}
+        />
       </View>
     );
   };
 
-  // 5) Render Siguientes 7 (listas de filas)
+  // 5) Render Siguientes 7
   const renderListItem = ({ item, index }: { item: Worker | null; index: number }) => {
     if (!item) {
-      // Placeholder “Vacante”
       return (
         <View style={[styles.listRow, styles.placeholderRow]} key={`list-ph-${index}`}>
           <Text style={styles.placeholderText}>Vacante</Text>
@@ -189,33 +176,16 @@ const RankingScreen: React.FC = () => {
         style={[
           styles.listRow,
           {
-            backgroundColor:
-              item.rating >= 4.5
-                ? '#ECFDF5'
-                : item.rating < 3.0
-                ? '#FEF3F2'
-                : '#FFFFFF',
-            shadowOpacity: 0.05 + (7 - index) * 0.01, // sombra según posición
+            backgroundColor: item.rating >= 4.5 ? '#ECFDF5' : item.rating < 3.0 ? '#FEF3F2' : '#FFFFFF',
+            shadowOpacity: 0.05 + (7 - index) * 0.01,
           },
         ]}
         key={`list-${item.id}`}
       >
-        {item.foto_perfil ? (
-          <Avatar.Image
-            size={48}
-            source={{ uri: item.foto_perfil }}
-            style={styles.listAvatar}
-          />
-        ) : (
-          <Avatar.Icon size={48} icon="account" style={styles.listAvatar} />
-        )}
+        {item.foto_perfil ? <Avatar.Image size={48} source={{ uri: item.foto_perfil }} style={styles.listAvatar} /> : <Avatar.Icon size={48} icon="account" style={styles.listAvatar} />}
         <View style={styles.listTextBlock}>
-          <Text style={styles.listNameText} numberOfLines={1} ellipsizeMode="tail">
-            {item.nombre} {item.apellido}
-          </Text>
-          <Text style={styles.listProfessionText} numberOfLines={1} ellipsizeMode="tail">
-            {item.profesion}
-          </Text>
+          <Text style={styles.listNameText} numberOfLines={1} ellipsizeMode="tail">{item.nombre} {item.apellido}</Text>
+          <Text style={styles.listProfessionText} numberOfLines={1} ellipsizeMode="tail">{item.profesion}</Text>
         </View>
         <StarRating rating={item.rating} />
       </View>
@@ -226,7 +196,7 @@ const RankingScreen: React.FC = () => {
   if (loading) {
     return (
       <View style={styles.loaderContainer}>
-        <ActivityIndicator size="large" color="#2F80ED" />
+        <ActivityIndicator size="large" color={RANK_COLORS[0]} />
       </View>
     );
   }
@@ -298,18 +268,22 @@ const styles = StyleSheet.create({
 
   // Picker
   pickerContainer: {
-    marginHorizontal: 16,
+    marginHorizontal: 8,
+    marginTop: 8,
     borderWidth: 1,
     borderColor: '#d0d3db',
-    borderRadius: 8,
-    marginBottom: 16,
+    borderRadius: 12,
+    marginBottom: 20,
     overflow: 'hidden',
     backgroundColor: '#fff',
-    elevation: 1,
+    elevation: 2,
+    height: 60, // Aumenta la altura del contenedor
+    justifyContent: 'center',
   },
   picker: {
-    height: 48,
+    height: 56, // Aumenta la altura del picker
     width: '100%',
+    fontSize: 18,
   },
   pickerItem: {
     fontSize: 14,
@@ -357,10 +331,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 12,
     paddingTop: 16,
+    backgroundColor: 'transparent', // quita el blanco interno
   },
   topAvatar: {
     marginBottom: 12,
-    backgroundColor: '#e6eaf2',
+    backgroundColor: 'transparent', // para que no tape el fondo tintado
   },
   topNameText: {
     fontSize: 16,
