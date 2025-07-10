@@ -168,48 +168,6 @@ export default function PerfilEditarScreen() {
     }
   };
 
-  const pickGalleryImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permiso denegado');
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      quality: 0.7,
-    });
-
-    if (!result.canceled) {
-      const uri = result.assets[0].uri;
-      const fileName = uri.split('/').pop() || 'galeria.jpg';
-      const ext = fileName.split('.').pop();
-
-      const formData = new FormData();
-      formData.append('imagen', {
-        uri,
-        name: fileName,
-        type: `image/${ext}`,
-      } as any);
-
-      try {
-        const res = await fetch('http://192.168.100.4:8000/api/fotos-trabajador/', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: formData,
-        });
-
-        if (!res.ok) throw new Error(await res.text());
-        Alert.alert('Éxito', 'Imagen subida a la galería');
-      } catch (e: any) {
-        console.error(e);
-        Alert.alert('Error', e.message);
-      }
-    }
-  };
 
   const toggleServicio = (id: number) => {
     setServiciosSeleccionados((prev) =>
@@ -257,11 +215,15 @@ export default function PerfilEditarScreen() {
     }
 
     try {
-      const res = await fetch('http://192.168.100.4:8000/api/usuarios/actualizar-perfil/', {
-        method: 'PUT',
-        headers: { Authorization: `Bearer ${accessToken}` },
-        body: form,
-      });
+
+      const res = await fetch(
+        'http://192.168.100.4:8000/api/usuarios/actualizar-perfil/',
+        {
+          method: 'PUT',
+          headers: { Authorization: `Bearer ${accessToken}` },
+          body: form,
+        }
+      );
       if (!res.ok) throw new Error(await res.text());
       Alert.alert('Éxito', 'Perfil actualizado');
       router.back();
@@ -272,6 +234,50 @@ export default function PerfilEditarScreen() {
       setSubmitting(false);
     }
   };
+
+  const pickGalleryImage = async () => {
+  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (status !== 'granted') {
+    Alert.alert('Permiso denegado');
+    return;
+  }
+
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    allowsEditing: true,
+    quality: 0.7,
+  });
+
+
+  if (!result.canceled) {
+    const uri = result.assets[0].uri;
+    const fileName = uri.split('/').pop() || 'galeria.jpg';
+    const ext = fileName.split('.').pop();
+
+    const formData = new FormData();
+    formData.append('imagen', {
+      uri,
+      name: fileName,
+      type: `image/${ext}`,
+    } as any);
+
+    try {
+      const res = await fetch('http://192.168.100.4:8000/api/fotos-trabajador/', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error(await res.text());
+      Alert.alert('Éxito', 'Imagen subida a la galería');
+    } catch (e: any) {
+      console.error(e);
+      Alert.alert('Error', e.message);
+    }
+  }
+};
 
   if (loading) {
     return (

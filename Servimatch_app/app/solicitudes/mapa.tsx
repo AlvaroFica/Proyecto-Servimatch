@@ -30,7 +30,6 @@ interface Solicitud {
 
 const API = 'http://192.168.100.4:8000';
 
-
 export default function MapaSolicitudesScreen() {
   const { tokens } = useAuth();
   const theme = useTheme();

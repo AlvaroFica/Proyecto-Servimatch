@@ -1,15 +1,14 @@
-// app/solicitudes/[id].tsx
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 import {
-    ActivityIndicator,
-    Button,
-    Card,
-    Paragraph,
-    Text,
-    Title,
-    useTheme,
+  ActivityIndicator,
+  Button,
+  Card,
+  Paragraph,
+  Text,
+  Title,
+  useTheme,
 } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BaseLayout from '../../components/BaseLayout';
@@ -27,7 +26,7 @@ interface Solicitud {
 
 export default function SolicitudDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { tokens } = useAuth();
+  const { tokens, user } = useAuth();
   const router = useRouter();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
@@ -40,6 +39,7 @@ export default function SolicitudDetailScreen() {
     if (!id || !tokens?.access) return;
     (async () => {
       try {
+
         const res = await fetch(`http://192.168.100.4:8000/api/solicitudes/${id}/`,
 
           { headers: { Authorization: `Bearer ${tokens.access}` } }
@@ -87,7 +87,10 @@ export default function SolicitudDetailScreen() {
     }
   };
 
-  // Muestra indicador mientras carga
+  const pagarSolicitud = () => {
+    router.push(`./confirmarPagoSolicitud?solicitud_id=${solicitud?.id}&monto=${solicitud?.precio}`);
+  };
+
   if (loading) {
     return (
       <BaseLayout title="Detalle Solicitud" back>
@@ -108,7 +111,6 @@ export default function SolicitudDetailScreen() {
     );
   }
 
-  // Asegura número y formatea
   const precioNum = Number(solicitud.precio) || 0;
 
   return (
@@ -137,16 +139,28 @@ export default function SolicitudDetailScreen() {
             </Paragraph>
           </Card.Content>
           <Card.Actions style={styles.actions}>
-            <Button
-              mode="contained"
-              onPress={aceptarSolicitud}
-              loading={processing}
-              disabled={solicitud.aceptada || processing}
-              style={[styles.button, { backgroundColor: theme.colors.primary }]}
-              contentStyle={styles.buttonContent}
-            >
-              {solicitud.aceptada ? 'Aceptada' : 'Aceptar solicitud'}
-            </Button>
+            {user?.rol === 'trabajador' && (
+              <Button
+                mode="contained"
+                onPress={aceptarSolicitud}
+                loading={processing}
+                disabled={solicitud.aceptada || processing}
+                style={[styles.button, { backgroundColor: theme.colors.primary }]}
+                contentStyle={styles.buttonContent}
+              >
+                {solicitud.aceptada ? 'Aceptada' : 'Aceptar solicitud'}
+              </Button>
+            )}
+            {user?.rol === 'cliente' && solicitud.aceptada && (
+              <Button
+                mode="contained"
+                onPress={pagarSolicitud}
+                style={[styles.button, { backgroundColor: theme.colors.primary }]}
+                contentStyle={styles.buttonContent}
+              >
+                Pagar solicitud
+              </Button>
+            )}
           </Card.Actions>
         </Card>
       </View>
@@ -160,7 +174,7 @@ const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   card: { marginBottom: 16, borderRadius: 8 },
   bold: { fontWeight: 'bold' },
-  actions: { justifyContent: 'flex-end', padding: 16 },
-  button: { flex: 1 },
+  actions: { justifyContent: 'flex-end', padding: 16, flexDirection: 'column', gap: 12 },
+  button: { width: '100%' },
   buttonContent: { height: 48 },
 });

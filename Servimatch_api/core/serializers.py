@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import (
     Usuario, Cliente, Servicio, Profesion, Trabajador, ExperienciaProfesional,
     FotoTrabajador, Calificacion, Solicitud, Pago, Etiqueta,
-    EtiquetaCalificacion, PlanServicio, Reserva, )
+    EtiquetaCalificacion, PlanServicio, Reserva, PagoServicio, PagoSolicitud )
 from django.db.models import Avg 
 import json   
 
@@ -280,10 +280,7 @@ class ExperienciaProfesionalSerializer(serializers.ModelSerializer):
                     descripcion_breve=exp.get('descripcion_breve', ''),
                     idiomas=exp.get('idiomas', '')
                 )
-
         return instance
-
-
 
 class SolicitudSerializer(serializers.ModelSerializer):
     cliente     = ClienteSerializer(read_only=True)
@@ -404,10 +401,6 @@ class ReservaSerializer(serializers.ModelSerializer):
         read_only_fields = ['trabajador']
 
 
-
-
-
-
 # ✅ Chat y Mensaje serializers
 from .models import Chat, Mensaje
 from .models import Notificacion
@@ -464,4 +457,27 @@ class ChatSerializer(serializers.ModelSerializer):
 class NotificacionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notificacion
+        fields = ['id', 'cliente', 'trabajador', 'creado']
+
+
+class PagoServicioSerializer(serializers.ModelSerializer):
+    plan = serializers.SerializerMethodField()
+    trabajador = serializers.SerializerMethodField()
+
+    def get_plan(self, obj):
+        return {'nombre': obj.plan.nombre}
+
+    def get_trabajador(self, obj):
+        return {
+            'nombre': obj.trabajador.usuario.nombre,
+            'apellido': obj.trabajador.usuario.apellido,
+        }
+
+    class Meta:
+        model = PagoServicio
+        fields = ['id', 'plan', 'trabajador', 'monto', 'estado', 'fecha']
+
+class PagoSolicitudSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PagoSolicitud
         fields = '__all__'

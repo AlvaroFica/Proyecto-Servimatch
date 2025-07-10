@@ -9,8 +9,6 @@ class Usuario(AbstractUser):
         ('ambos', 'Ambos'),
     ]
 
-    
-
     es_trabajador = models.BooleanField(default=False)
     foto_perfil   = models.ImageField(upload_to='perfiles/', null=True, blank=True)
     biografia     = models.TextField(blank=True)
@@ -250,13 +248,6 @@ class Reserva(models.Model):
         return f"Reserva {self.plan.nombre} {self.fecha} {self.hora_inicio}"
 
 
-
-
-
-
-
-
-
 from django.conf import settings
 
 class Chat(models.Model):
@@ -295,3 +286,36 @@ class Notificacion(models.Model):
 
     def __str__(self):
         return f"{self.usuario.username} - {self.mensaje}"
+
+class PagoServicio(models.Model):
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    plan = models.ForeignKey('PlanServicio', on_delete=models.CASCADE)
+    trabajador = models.ForeignKey('Trabajador', on_delete=models.CASCADE)
+    monto = models.DecimalField(max_digits=10, decimal_places=2)
+    estado = models.CharField(max_length=50, default='pendiente')
+    fecha = models.DateTimeField(auto_now_add=True)
+    flow_order = models.CharField(max_length=100, blank=True, null=True)
+    flow_token = models.CharField(max_length=100, blank=True, null=True)
+
+    def __str__(self):
+        return f'Pago de {self.usuario} a {self.trabajador} por {self.plan}'
+
+class PagoSolicitud(models.Model):
+    ESTADOS = [
+        ('pendiente', 'Pendiente'),
+        ('pagado', 'Pagado'),
+        ('fallido', 'Fallido'),
+    ]
+
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    trabajador = models.ForeignKey('Trabajador', on_delete=models.CASCADE)
+    solicitud = models.OneToOneField('Solicitud', on_delete=models.CASCADE)
+    monto = models.DecimalField(max_digits=10, decimal_places=2)
+    estado = models.CharField(max_length=10, choices=ESTADOS, default='pendiente')
+    flow_order = models.CharField(max_length=100, blank=True, null=True)
+    flow_token = models.CharField(max_length=100, blank=True, null=True)
+    fecha = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Pago solicitud {self.solicitud.id} - {self.estado}"
+

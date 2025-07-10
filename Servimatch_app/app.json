@@ -20,18 +20,32 @@
       "config": {
         "googleMobileAdsAppId": "ca-app-pub-3940256099942544~3347511713"
       },
+<<<<<<< HEAD
       "package": "com.javi_road.Servimatch_app"
+=======
+      "package": "com.recnok.Servimatch_app"
+>>>>>>> flow-integration
     },
     "web": {
       "bundler": "metro",
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
+<<<<<<< HEAD
    "extra": {
       "GOOGLE_MAPS_API_KEY": "AlzaSyCS6ooqYpElPP7tdiyInfylA4SQRNhzCio",
       "router": {}
     },
 
+=======
+    "extra": {
+      "GOOGLE_MAPS_API_KEY": "AlzaSyCS6ooqYpElPP7tdiyInfylA4SQRNhzCio",
+      "router": {},
+      "eas": {
+        "projectId": "0badd4f5-6f1f-48f0-afef-fa50300cef7a"
+      }
+    },
+>>>>>>> flow-integration
     "plugins": [
       "expo-router",
       [
@@ -50,6 +64,11 @@
     },
     "deepLinks": [
       "servimatchapp://"
+<<<<<<< HEAD
     ]
+=======
+    ],
+    "owner": "recnok"
+>>>>>>> flow-integration
   }
 }

@@ -1,13 +1,25 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
-from .views import ProfesionViewSet, PlanServicioViewSet, ReservaViewSet, CreateCheckoutSessionView, StripeRedirectView, StripeCancelRedirectView, SolicitudViewSet, UsuarioViewSet, MisChatsView, ObtenerOCrearChatView
+from .views import (
+    ProfesionViewSet,
+    PlanServicioViewSet,
+    ReservaViewSet,
+    CreateCheckoutSessionView,
+    StripeRedirectView,
+    StripeCancelRedirectView,
+    SolicitudViewSet,
+    UsuarioViewSet,
+    MisChatsView,
+    ObtenerOCrearChatView,
+    IniciarPagoFlowView,
+    confirmar_pago_flow,
+    listar_pagos_usuario,
+    IniciarPagoSolicitudFlowView,
+    confirmar_pago_solicitud_flow,
+)
 from django.conf import settings
 from django.conf.urls.static import static
-
-
-
-
 
 
 router = DefaultRouter()
@@ -29,7 +41,8 @@ router.register('notificaciones', views.NotificacionViewSet, basename='notificac
 
 
 urlpatterns = [
-    
+    path('flow/iniciar-pago/', IniciarPagoFlowView.as_view(), name='flow-iniciar-pago'),
+    path('flow/confirmacion/', confirmar_pago_flow, name='flow-confirmacion'),
     path('stripe/create-checkout-session/', CreateCheckoutSessionView.as_view(), name='create-checkout-session'),
     path('stripe/success/', StripeRedirectView.as_view(), name='stripe-redirect-success'),
     path('stripe/cancel/', StripeCancelRedirectView.as_view(), name='stripe-redirect-cancel'),
@@ -40,6 +53,10 @@ urlpatterns = [
     path('ranking/trabajadores/', views.top_trabajadores, name='top-trabajadores'),
     path('chats/', MisChatsView.as_view(), name='mis-chats'),
     path('chats/obtener_o_crear/', ObtenerOCrearChatView.as_view(), name='obtener_o_crear_chat'),
+
+    path('pagos/', listar_pagos_usuario),
+    path('flow/iniciar-pago-solicitud/', IniciarPagoSolicitudFlowView.as_view()),
+    path('flow/confirmacion-solicitud/', confirmar_pago_solicitud_flow),
 
     path('', include(router.urls)),
 ]

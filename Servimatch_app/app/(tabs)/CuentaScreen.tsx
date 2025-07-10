@@ -76,7 +76,12 @@ export default function CuentaScreen() {
   }
 
   const isTrabajador = user?.es_trabajador === true;
-  const avatarUri = user?.foto_perfil ? user.foto_perfil.startsWith('http') ? user.foto_perfil : `http://192.168.100.4:8000${user.foto_perfil}` : null;
+
+  const avatarUri = user?.foto_perfil
+    ? user.foto_perfil.startsWith('http')
+      ? user.foto_perfil
+      : `http://192.168.100.4:8000${user.foto_perfil}`
+    : null;
 
   return (
     <BaseLayout title="Mi cuenta">
@@ -164,7 +169,7 @@ export default function CuentaScreen() {
                 onPress={() => router.push('/solicitudes')}
                 style={styles.listItem}
               />
-              <List.Item                
+              <List.Item
                 title="Historial"
                 left={props => <List.Icon {...props} icon="history" color={theme.colors.primary} />}
                 onPress={() => router.push('./historial')}
@@ -269,7 +274,7 @@ logoutButton: {
   marginBottom: 32, // 🔼 garantiza que no quede pegado al tab bar
 },
 logoutContent: {
-  height: 40, // 🔼 lo dejamos como antes para buena interacción
+  height: 40, //  lo dejamos como antes para buena interacción
 },
 
   loader: {

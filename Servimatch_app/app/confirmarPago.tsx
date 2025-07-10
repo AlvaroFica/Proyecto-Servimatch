@@ -63,37 +63,32 @@ export default function ConfirmarPagoScreen() {
     if (!plan) return;
     setPaying(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/stripe/create-checkout-session/`, {
+      const res = await fetch(`${API_BASE_URL}/api/flow/iniciar-pago/`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${tokens!.access}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ plan_id: plan.id, fecha, hora_inicio }),
+        body: JSON.stringify({
+          plan_id: plan.id,
+          monto: plan.precio,
+        }),
       });
 
-      if (res.status === 409) {
-        Alert.alert(
-          'Franja ocupada',
-          'Lo siento, esa franja ya fue reservada. Por favor elige otro horario.',
-          [{ text: 'OK', onPress: () => router.back() }]
-        );
-        return;
+      const data = await res.json();
+
+      if (!res.ok || !data.url) {
+        throw new Error(data.error || 'No se pudo generar el link de pago.');
       }
 
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || 'Error al iniciar pago');
-      }
-
-      const { url } = await res.json();
       const returnUrl = 'servimatchapp://pago-exitoso';
-      const result = await WebBrowser.openAuthSessionAsync(url, returnUrl);
+      const result = await WebBrowser.openAuthSessionAsync(data.url, returnUrl);
 
       if (result.type === 'success') {
         router.push('/pago-exitoso');
       } else {
         Alert.alert('Pago cancelado o interrumpido');
+        router.push('/pago-fallido');
       }
     } catch (err: any) {
       console.error(err);
@@ -103,7 +98,6 @@ export default function ConfirmarPagoScreen() {
     }
   };
 
-  // estados de carga y errores
   if (loading) {
     return (
       <BaseLayout title="Confirmar pago" back>
@@ -124,7 +118,6 @@ export default function ConfirmarPagoScreen() {
     );
   }
 
-  // Detalles desestructurados
   const { nombre, duracion_estimado, precio } = plan;
 
   return (
@@ -135,7 +128,7 @@ export default function ConfirmarPagoScreen() {
           { paddingBottom: insets.bottom + 16, backgroundColor: theme.colors.background },
         ]}
       >
-        <Surface style={[styles.summary, { backgroundColor: theme.colors.surface }]}>  
+        <Surface style={[styles.summary, { backgroundColor: theme.colors.surface }]}>
           <Title>Resumen de Reserva</Title>
           <Paragraph>
             <Paragraph style={styles.bold}>Plan:</Paragraph> {nombre}

@@ -1,5 +1,20 @@
 from django.contrib import admin
-from .models import Usuario, Cliente, Servicio, Trabajador, Solicitud, Pago, Calificacion, Etiqueta, EtiquetaCalificacion, Profesion, ExperienciaProfesional, Notificacion
+from .models import (
+    Usuario,
+    Cliente,
+    Servicio,
+    Trabajador,
+    Solicitud,
+    Pago,
+    Calificacion,
+    Etiqueta,
+    EtiquetaCalificacion,
+    Profesion,
+    ExperienciaProfesional,
+    Notificacion,
+    PagoServicio,
+    PagoSolicitud,
+)
 
 # Registro básico del modelo Usuario
 @admin.register(Profesion)
@@ -89,13 +104,27 @@ class ReservaAdmin(admin.ModelAdmin):
     search_fields = ('cliente__usuario__username', 'plan__nombre')
 
 
-
-
 @admin.register(Notificacion)
 class NotificacionAdmin(admin.ModelAdmin):
     list_display = ('usuario', 'mensaje', 'tipo', 'leido', 'fecha')
     search_fields = ('mensaje', 'tipo', 'usuario__username')
     list_filter = ('leido', 'tipo', 'fecha')
+
+@admin.register(PagoServicio)
+class PagoServicioAdmin(admin.ModelAdmin):
+    list_display = ('id', 'usuario', 'trabajador', 'plan', 'monto', 'estado', 'fecha', 'flow_order')
+    list_filter = ('estado', 'fecha')
+    search_fields = ('usuario__email', 'trabajador__nombre', 'plan__nombre', 'flow_order')
+    ordering = ('-fecha',)
+
+
+@admin.register(PagoSolicitud)
+class PagoSolicitudAdmin(admin.ModelAdmin):
+    list_display = ('id', 'usuario', 'trabajador', 'solicitud', 'monto', 'estado', 'fecha')
+    list_filter = ('estado',)
+    search_fields = ('usuario__email', 'trabajador__usuario__email')
+
+
 
 
 

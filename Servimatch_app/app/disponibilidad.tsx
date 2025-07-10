@@ -29,12 +29,12 @@ function formatearMes(fecha: Date): string {
 function formatearFechaCompleta(fecha: Date): string {
   return fecha.toLocaleDateString('es-CL', { day: '2-digit', month: 'long' });
 }
+
 function finSemana(fecha: Date): Date {
   const fin = new Date(fecha);
   fin.setDate(fin.getDate() + 6);
   return fin;
 }
-
 
 export default function DisponibilidadScreen() {
   const { tokens } = useAuth();
@@ -50,57 +50,48 @@ export default function DisponibilidadScreen() {
   const [ocupados, setOcupados] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+
   const [fechaInicioSemana, setFechaInicioSemana] = useState<Date>(() => {
-    const today = new Date();
-    today.setDate(today.getDate() - ((today.getDay() + 6) % 7)); // Lunes
-    return today;
- });
-useEffect(() => {
-  if (!tokens?.access || !planId) {
-    console.warn("⚠️ Token o planId faltante:", { token: tokens?.access, planId });
-    return;
-  }
+    return new Date(); // hoy
+  });
 
-  console.log("📡 Solicitando plan:", planId);
+  useEffect(() => {
+    if (!tokens?.access || !planId) {
+      console.warn("⚠️ Token o planId faltante:", { token: tokens?.access, planId });
+      return;
+    }
 
-  fetch(`${API_BASE_URL}/api/planes/${planId}/`, {
-    headers: { Authorization: `Bearer ${tokens.access}` },
-  })
-    .then(async res => {
-      if (!res.ok) {
-        const text = await res.text();
-        console.error(`❌ Error HTTP al obtener plan (${res.status}):`, text);
-        throw new Error(`HTTP ${res.status}`);
-      }
-      return res.json();
+    console.log("📡 Solicitando plan:", planId);
+
+    fetch(`${API_BASE_URL}/api/planes/${planId}/`, {
+      headers: { Authorization: `Bearer ${tokens.access}` },
     })
-    .then((data) => {
-      console.log('✅ Plan recibido:', data);
-      setTrabajador(data.trabajador);
+      .then(async res => {
+        if (!res.ok) {
+          const text = await res.text();
+          console.error(`❌ Error HTTP al obtener plan (${res.status}):`, text);
+          throw new Error(`HTTP ${res.status}`);
+        }
+        return res.json();
+      })
+      .then((data) => {
+        console.log('✅ Plan recibido:', data);
+        setTrabajador(data.trabajador);
 
-      const [h, m] = data.duracion_estimado.split(':').map(Number);
-      if (isNaN(h) || isNaN(m)) throw new Error('Formato inválido en duración');
-      setDuracion(h * 60 + m);
-    })
-    .catch(err => {
-      console.error('🚨 Error al cargar datos del plan:', err.message || err);
-      Alert.alert('Error', 'No se pudo cargar los datos del plan');
-    });
-}, [tokens, planId]);
+        const [h, m] = data.duracion_estimado.split(':').map(Number);
+        if (isNaN(h) || isNaN(m)) throw new Error('Formato inválido en duración');
+        setDuracion(h * 60 + m);
+      })
+      .catch(err => {
+        console.error('🚨 Error al cargar datos del plan:', err.message || err);
+        Alert.alert('Error', 'No se pudo cargar los datos del plan');
+      });
+  }, [tokens, planId]);
 
+  const inicio = fechaInicioSemana;
+  const fin = finSemana(fechaInicioSemana);
+  const textoSemana = `Disponibilidad para los próximos 7 días`;
 
-
- 
-const inicio = fechaInicioSemana;
-const fin = finSemana(fechaInicioSemana);
-const mismoMes = inicio.getMonth() === fin.getMonth();
-
-const textoSemana = mismoMes
-  ? `Semana del ${formatearFecha(inicio)} al ${formatearFecha(fin)} de ${formatearMes(inicio)}`
-  : `Semana del ${formatearFechaCompleta(inicio)} al ${formatearFechaCompleta(fin)}`;
-
-
-  // Duración del plan
   useEffect(() => {
     if (!tokens?.access || !planId) return;
 
@@ -122,7 +113,6 @@ const textoSemana = mismoMes
       });
   }, [tokens, planId]);
 
-  // Carga de slots según fecha seleccionada
   useEffect(() => {
     if (!duracion || !planId) return;
 
@@ -179,7 +169,6 @@ const textoSemana = mismoMes
                 source={{ uri: `${API_BASE_URL}${trabajador.foto_perfil}` }}
                 style={styles.fotoPerfil}
               />
-
             )}
             <Text style={styles.trabajadorNombre}>
               {trabajador.nombre} {trabajador.apellido}
@@ -190,57 +179,51 @@ const textoSemana = mismoMes
           </View>
         )}
 
-
         <Title style={styles.tituloCentrado}>
           {textoSemana}
         </Title>
 
-
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
-            <Button
-              onPress={() => {
-                const nueva = new Date(fechaInicioSemana);
-                nueva.setDate(nueva.getDate() - 7);
-                setFechaInicioSemana(nueva);
-              }}
-              disabled={fechaInicioSemana <= new Date(new Date().toDateString())}
-            >
-              ‹
-            </Button>
-
-
-            <Button onPress={() => {
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+          <Button
+            onPress={() => {
               const nueva = new Date(fechaInicioSemana);
-              nueva.setDate(nueva.getDate() + 7);
+              nueva.setDate(nueva.getDate() - 7);
               setFechaInicioSemana(nueva);
-            }}>
-              ›
-            </Button>
-          </View>
-          <View style={styles.semanaGrid}>
-            {getSemana(fechaInicioSemana).map(({ dia, fecha: f }) => {
-              const fechaStr = f.toISOString().slice(0, 10);
-              const seleccionado = fecha.toDateString() === f.toDateString();
+            }}
+            disabled={false}
+          >
+            ‹
+          </Button>
+          <Button onPress={() => {
+            const nueva = new Date(fechaInicioSemana);
+            nueva.setDate(nueva.getDate() + 7);
+            setFechaInicioSemana(nueva);
+          }}>
+            ›
+          </Button>
+        </View>
 
-              return (
-                <Chip
-                  key={fechaStr}
-                  selected={seleccionado}
-                  onPress={() => setFecha(f)}
-                  style={[
-                    styles.diaChip,
-                    seleccionado && styles.diaChipSeleccionado,
-                  ]}
-                  textStyle={{ color: seleccionado ? '#fff' : '#000' }}
-                >
-                  {`${dia} ${f.getDate()}`}
-                </Chip>
-              );
-            })}
-          </View>
+        <View style={styles.semanaGrid}>
+          {getSemana(fechaInicioSemana).map(({ dia, fecha: f }) => {
+            const fechaStr = f.toISOString().slice(0, 10);
+            const seleccionado = fecha.toDateString() === f.toDateString();
 
-          
-
+            return (
+              <Chip
+                key={fechaStr}
+                selected={seleccionado}
+                onPress={() => setFecha(f)}
+                style={[
+                  styles.diaChip,
+                  seleccionado && styles.diaChipSeleccionado,
+                ]}
+                textStyle={{ color: seleccionado ? '#fff' : '#000' }}
+              >
+                {`${dia} ${f.getDate()}`}
+              </Chip>
+            );
+          })}
+        </View>
 
         <Title style={{ marginTop: 16 }}>Franjas disponibles</Title>
         <View style={styles.chipContainer}>
@@ -249,14 +232,13 @@ const textoSemana = mismoMes
             const esHoy = fecha.toDateString() === hoy.toDateString();
             const inicio = slot.split(' - ')[0];
 
-            // Si es hoy, omitimos slots que ya pasaron
             if (esHoy) {
               const [hora, minuto] = inicio.split(':').map(Number);
               if (
                 hora < hoy.getHours() ||
                 (hora === hoy.getHours() && minuto <= hoy.getMinutes())
               ) {
-                return null; // no mostrar este slot
+                return null;
               }
             }
 
@@ -282,9 +264,7 @@ const textoSemana = mismoMes
           style={styles.confirmBtn}
           onPress={() =>
             router.push(
-              `./confirmarPago?planId=${planId}&fecha=${fechaIso}&hora_inicio=${
-                selectedSlot?.split(' - ')[0]
-              }`
+              `./confirmarPago?planId=${planId}&fecha=${fechaIso}&hora_inicio=${selectedSlot?.split(' - ')[0]}`
             )
           }
         >
@@ -302,10 +282,10 @@ const styles = StyleSheet.create({
   chip: { margin: 4 },
   confirmBtn: { marginTop: 24 },
   semanaGrid: {
-  flexDirection: 'row',
-  flexWrap: 'wrap',
-  justifyContent: 'space-between',
-  marginVertical: 12,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginVertical: 12,
   },
   diaChip: {
     width: '30%',
@@ -316,58 +296,45 @@ const styles = StyleSheet.create({
     backgroundColor: '#1976D2',
   },
   tituloCentrado: {
-  textAlign: 'center',
-  fontSize: 18,
-  fontWeight: 'bold',
-  marginBottom: 8,
-},
-trabajadorBox: {
-  alignItems: 'center',
-  marginBottom: 20,
-},
-
-fotoPerfil: {
-  width: 80,
-  height: 80,
-  borderRadius: 40,
-  marginBottom: 8,
-  backgroundColor: '#ccc',
-},
-
-trabajadorNombre: {
-  fontSize: 18,
-  fontWeight: 'bold',
-  color: '#000',
-},
-
-trabajadorEspecialidad: {
-  fontSize: 14,
-  color: '#666',
-},
-
-
+    textAlign: 'center',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  trabajadorBox: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  fotoPerfil: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    marginBottom: 8,
+    backgroundColor: '#ccc',
+  },
+  trabajadorNombre: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  trabajadorEspecialidad: {
+    fontSize: 14,
+    color: '#666',
+  },
 });
 
-
 function getSemana(fechaBase: Date): { dia: string; fecha: Date }[] {
-  const dias = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+  const dias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
   const semana = [];
-  const hoy = new Date(new Date().toDateString());
-
-  // Ajustar fecha base al lunes de la semana
-  const base = new Date(fechaBase);
-  base.setDate(fechaBase.getDate() - ((fechaBase.getDay() + 6) % 7)); // lunes
 
   for (let i = 0; i < 7; i++) {
-    const fecha = new Date(base);
-    fecha.setDate(base.getDate() + i);
+    const fecha = new Date(fechaBase);
+    fecha.setDate(fechaBase.getDate() + i);
 
-    if (fecha >= hoy) {
-      semana.push({
-        dia: dias[i],
-        fecha,
-      });
-    }
+    semana.push({
+      dia: dias[fecha.getDay()],
+      fecha,
+    });
   }
 
   return semana;
