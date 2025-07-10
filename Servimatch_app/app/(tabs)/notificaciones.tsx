@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { obtenerNotificaciones, marcarComoLeidas } from '../../services/notificaciones';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router'; // ✅ importado correctamente
 
 interface Notificacion {
   id: number;
@@ -18,6 +19,8 @@ export default function NotificacionesScreen() {
   const { tokens } = useAuth();
   const theme = useTheme();
   const navigation = useNavigation();
+  const router = useRouter(); // ✅ inicializado correctamente
+
   const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]);
 
   const fetchNotificaciones = async () => {
@@ -42,6 +45,12 @@ export default function NotificacionesScreen() {
       await marcarComoLeidas(tokens.access);
       const actualizadas = notificaciones.map((n) => ({ ...n, leido: true }));
       setNotificaciones(actualizadas);
+    }
+  };
+
+  const handleNavegar = (n: Notificacion) => {
+    if (n.tipo.toLowerCase() === 'mensaje') {
+      router.push('/chat'); // ✅ redirige al listado general de chats
     }
   };
 
@@ -70,7 +79,11 @@ export default function NotificacionesScreen() {
           <Text style={styles.vacio}>No hay notificaciones.</Text>
         ) : (
           notificaciones.map((n, i) => (
-            <Card key={i} style={[styles.card, !n.leido && styles.noLeido]}>
+            <Card
+              key={i}
+              style={[styles.card, !n.leido && styles.noLeido]}
+              onPress={() => handleNavegar(n)} // ✅ manejador centralizado
+            >
               <Card.Content>
                 <Title style={styles.notifTitulo}>Notificación</Title>
                 <Paragraph>{n.mensaje}</Paragraph>
