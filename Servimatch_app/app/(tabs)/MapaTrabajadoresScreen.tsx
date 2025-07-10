@@ -44,7 +44,11 @@ interface Trabajador {
   longitud: number;
 }
 
+<<<<<<< HEAD
 const API = 'http://192.168.100.9:8000';
+=======
+const API = 'http://192.168.1.41:8000';
+>>>>>>> auth-validaciones
 
 export default function MapaTrabajadoresScreen() {
   const { tokens } = useAuth();

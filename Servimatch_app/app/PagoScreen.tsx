@@ -18,7 +18,11 @@ export default function PagoScreen() {
 
   useEffect(() => {
     // Llamar al backend para crear sesión de pago y obtener URL
+<<<<<<< HEAD
     fetch(`http://192.168.100.9:8000/api/pagos/crear/`, {
+=======
+    fetch(`http://192.168.1.41:8000/api/pagos/crear/`, {
+>>>>>>> auth-validaciones
       method: 'POST',
       headers: {
         Authorization: `Bearer ${tokens?.access}`,
