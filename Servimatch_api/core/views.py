@@ -628,3 +628,39 @@ class NotificacionViewSet(viewsets.ModelViewSet):
     
 
 
+class ObtenerOCrearChatView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        usuario = request.user
+        trabajador_id = request.data.get('trabajador_id')
+
+        if not trabajador_id:
+            return Response({'error': 'Falta el ID del trabajador'}, status=400)
+
+        try:
+            trabajador = Usuario.objects.get(id=trabajador_id)
+        except Usuario.DoesNotExist:
+            return Response({'error': 'Trabajador no encontrado'}, status=404)
+
+        if usuario == trabajador:
+            return Response({'error': 'No puedes iniciar un chat contigo mismo'}, status=400)
+
+        # Determina los roles para crear o buscar el chat
+        if usuario.rol == 'cliente':
+            cliente = usuario
+        else:
+            cliente = trabajador
+
+        if usuario.rol == 'trabajador':
+            trabajador_final = usuario
+        else:
+            trabajador_final = trabajador
+
+        # Buscar si ya existe
+        chat, creado = Chat.objects.get_or_create(
+            cliente=cliente,
+            trabajador=trabajador_final
+        )
+
+        return Response({'chat_id': chat.id}, status=200)

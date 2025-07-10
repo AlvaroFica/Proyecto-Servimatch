@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
-from .views import ProfesionViewSet, PlanServicioViewSet, ReservaViewSet, CreateCheckoutSessionView, StripeRedirectView, StripeCancelRedirectView, SolicitudViewSet, UsuarioViewSet, MisChatsView 
+from .views import ProfesionViewSet, PlanServicioViewSet, ReservaViewSet, CreateCheckoutSessionView, StripeRedirectView, StripeCancelRedirectView, SolicitudViewSet, UsuarioViewSet, MisChatsView, ObtenerOCrearChatView
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -39,6 +39,7 @@ urlpatterns = [
     path('usuarios/actualizar-perfil/', views.ActualizarPerfilView.as_view(), name='actualizar-perfil'),
     path('ranking/trabajadores/', views.top_trabajadores, name='top-trabajadores'),
     path('chats/', MisChatsView.as_view(), name='mis-chats'),
+    path('chats/obtener_o_crear/', ObtenerOCrearChatView.as_view(), name='obtener_o_crear_chat'),
 
     path('', include(router.urls)),
 ]
