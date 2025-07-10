@@ -664,3 +664,102 @@ class ObtenerOCrearChatView(APIView):
         )
 
         return Response({'chat_id': chat.id}, status=200)
+##Pasarela de pago FLOW
+class IniciarPagoFlowView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        try:
+            solicitud_id = request.data.get('solicitud_id')
+            monto = request.data.get('monto')
+
+            if not solicitud_id or not monto:
+                return Response({'error': 'Faltan datos'}, status=400)
+
+            solicitud = Solicitud.objects.filter(id=solicitud_id).first()
+            if not solicitud:
+                return Response({'error': 'Solicitud no encontrada'}, status=404)
+
+            # Parámetros para Flow
+            data = {
+                "apiKey": settings.FLOW_API_KEY,
+                "subject": "Pago de servicio",
+                "amount": float(monto),
+                "currency": "CLP",
+                "email": request.user.email,
+                "urlReturn": "servimatchapp://pago-exitoso",
+                "urlConfirmation": request.build_absolute_uri("/api/flow/confirmacion/"),
+                "optional": f"solicitud_id={solicitud_id}"
+            }
+
+            # Firma HMAC SHA256
+            sorted_keys = sorted(data.keys())
+            to_sign = "".join(f"{k}{data[k]}" for k in sorted_keys)
+            signature = hmac.new(
+                settings.FLOW_SECRET_KEY.encode(),
+                to_sign.encode(),
+                hashlib.sha256
+            ).hexdigest()
+            data["s"] = signature
+
+            # Enviar solicitud a Flow
+            response = requests.post(f"{settings.FLOW_API_URL}/payment/create", data=data)
+            flow_data = response.json()
+
+            if 'url' in flow_data:
+                return Response({"url": flow_data["url"]})
+            else:
+                return Response({"error": flow_data.get("message", "Error en Flow")}, status=500)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+            
+
+@api_view(['POST'])
+@permission_classes([AllowAny])  # Flow no está autenticado
+def confirmar_pago_flow(request):
+    try:
+        data = request.POST.dict()
+
+        # Validar firma
+        received_signature = data.pop("s", None)
+        sorted_keys = sorted(data.keys())
+        to_sign = "".join(f"{k}{data[k]}" for k in sorted_keys)
+        expected_signature = hmac.new(
+            settings.FLOW_SECRET_KEY.encode(),
+            to_sign.encode(),
+            hashlib.sha256
+        ).hexdigest()
+
+        if received_signature != expected_signature:
+            return Response({"error": "Firma inválida"}, status=400)
+
+        # Extraer solicitud_id desde el campo 'optional'
+        solicitud_id = None
+        optional = data.get("optional", "")
+        if optional.startswith("solicitud_id="):
+            solicitud_id = optional.replace("solicitud_id=", "")
+
+        if not solicitud_id:
+            return Response({"error": "No se pudo obtener solicitud_id"}, status=400)
+
+        solicitud = Solicitud.objects.filter(id=solicitud_id).first()
+        if not solicitud:
+            return Response({"error": "Solicitud no encontrada"}, status=404)
+
+        # Crear pago
+        Pago.objects.create(
+            solicitud=solicitud,
+            monto=solicitud.precio,
+            liberado=False
+        )
+
+        # Marcar solicitud como pagada/aceptada
+        solicitud.estado = 'Aceptada'
+        solicitud.aceptada = True
+        solicitud.save(update_fields=['estado', 'aceptada'])
+
+        return Response({"status": "ok"})
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)

@@ -111,4 +111,9 @@ STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY')
 STRIPE_WEBHOOK_SECRET  = os.getenv('STRIPE_WEBHOOK_SECRET')
 ##################################################
 
+##Claves para Flow
+FLOW_API_KEY = config("FLOW_API_KEY")
+FLOW_SECRET_KEY = config("FLOW_SECRET_KEY")
+FLOW_API_URL = "https://sandbox.flow.cl/api"
+
 APPEND_SLASH = True
