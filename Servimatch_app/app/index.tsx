@@ -23,11 +23,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import paperTheme from './theme';
 
-<<<<<<< HEAD
 const API_BASE_URL = 'http://192.168.100.9:8000';
-=======
-const API_BASE_URL = 'http://192.168.1.41:8000';
->>>>>>> auth-validaciones
 
 export default function AuthScreen() {
   return (

@@ -15,11 +15,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BaseLayout from '../components/BaseLayout';
 import { useAuth } from '../context/AuthContext';
 
-<<<<<<< HEAD
+
 const API_BASE_URL = 'http://192.168.100.9:8000';
-=======
-const API_BASE_URL = 'http://192.168.1.41:8000';
->>>>>>> auth-validaciones
+
 
 export default function ConfirmarPagoScreen() {
   const { tokens } = useAuth();

@@ -3,12 +3,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 
 
-
-
-
-
-
-
 const LGradient: any = LinearGradient;
 
 import {
@@ -25,11 +19,7 @@ import { Avatar, IconButton, Text, useTheme } from 'react-native-paper';
 import { useAuth } from '../../context/AuthContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-<<<<<<< HEAD
 const API_BASE_URL = 'http://192.168.100.9:8000';
-=======
-const API_BASE_URL = 'http://192.168.1.41:8000';
->>>>>>> auth-validaciones
 
 export default function ChatScreen() {
   const { id } = useLocalSearchParams();

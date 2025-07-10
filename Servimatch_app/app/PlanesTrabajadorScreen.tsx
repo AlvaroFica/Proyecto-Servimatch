@@ -11,11 +11,7 @@ import {
 import { Button, Card, Chip, Paragraph, Title, useTheme } from 'react-native-paper';
 import { useAuth } from '../context/AuthContext';
 
-<<<<<<< HEAD
 const API = 'http://192.168.100.9:8000';
-=======
-const API = 'http://192.168.1.41:8000';
->>>>>>> auth-validaciones
 
 export default function PlanesTrabajadorScreen() {
   const { tokens } = useAuth();
