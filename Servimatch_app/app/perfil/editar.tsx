@@ -293,7 +293,114 @@ export default function PerfilEditarScreen() {
     <BaseLayout title="Editar perfil" back>
       <ScrollView contentContainerStyle={styles.content}>
         <Animated.View style={{ opacity: fadeAnim }}>
-          {/* ...mantén tu layout completo aquí... */}
+          <View style={styles.avatarSection}>
+            <TouchableOpacity onPress={pickImage} activeOpacity={0.7}>
+              <Surface style={[styles.avatarContainer, { backgroundColor: theme.colors.surface }]}>
+                {fotoUri ? (
+                  <Avatar.Image size={100} source={{ uri: fotoUri }} />
+                ) : (
+                  <Avatar.Icon size={100} icon="account" />
+                )}
+              </Surface>
+            </TouchableOpacity>
+            <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>Foto de perfil</Text>
+          </View>
+
+          <Surface style={[styles.formSection, { backgroundColor: theme.colors.surface }]}>
+            <TextInput label="Nombre" value={nombre} onChangeText={setNombre} mode="outlined" error={nombreError} style={styles.input} />
+            {nombreError && <Text style={{ color: 'red', marginBottom: 8 }}>Solo letras permitidas</Text>}
+
+            <TextInput label="Apellido" value={apellido} onChangeText={setApellido} mode="outlined" error={apellidoError} style={styles.input} />
+            {apellidoError && <Text style={{ color: 'red', marginBottom: 8 }}>Solo letras permitidas</Text>}
+
+            <TextInput label="Teléfono" value={telefono} onChangeText={setTelefono} mode="outlined" error={telefonoError} style={styles.input} />
+            {telefonoError && <Text style={{ color: 'red', marginBottom: 8 }}>Formato chileno requerido (ej: 912345678)</Text>}
+
+            <TextInput label="Biografía" value={biografia} onChangeText={setBiografia} mode="outlined" multiline style={[styles.input, { height: 80 }]} error={biografiaError} />
+            <Text style={{ alignSelf: 'flex-end', marginBottom: biografiaError ? 4 : 16, color: biografia.length >= 50 ? 'green' : 'red' }}>
+              {biografia.trim().length}/50 caracteres requeridos
+            </Text>
+            {biografiaError && <Text style={{ color: 'red', marginBottom: 8 }}>Mínimo 50 caracteres</Text>}
+
+            <TextInput label="Dirección" value={direccion} onChangeText={setDireccion} mode="outlined" style={styles.input} />
+
+            <Text style={styles.sectionTitle}>Disponibilidad semanal</Text>
+            <View style={styles.tablaContainer}>
+              {diasSemana.map((dia) => {
+                const abierto = diaActivo === dia;
+                const franjas = disponibilidadObj[dia] || [];
+                const resumen = franjas
+                  .filter(f => f.inicio && f.fin)
+                  .map(f => `${f.inicio}–${f.fin}`)
+                  .join(', ') || 'CERRADO';
+
+                return (
+                  <View key={dia} style={styles.diaBox}>
+                    <TouchableOpacity
+                      style={styles.diaHeader}
+                      onPress={() => setDiaActivo(abierto ? null : dia)}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={styles.diaEmoji}>📅</Text>
+                      <Text style={styles.diaNombre}>
+                        {dia.charAt(0).toUpperCase() + dia.slice(1)}
+                      </Text>
+                      <Text style={styles.diaResumen}>{resumen}</Text>
+                      <Text style={styles.diaArrow}>{abierto ? '▼' : '▶'}</Text>
+                    </TouchableOpacity>
+
+                    {abierto && (
+                      <View style={styles.franjaRow}>
+                        <View style={styles.pickerColumn}>
+                          <Text style={styles.pickerLabel}>Inicio</Text>
+                          <Picker
+                            selectedValue={franjas[0]?.inicio || ''}
+                            onValueChange={(v) => actualizarFranja(dia, 0, 'inicio', v)}
+                            style={styles.picker}
+                          >
+                            <Picker.Item label="Hora..." value="" />
+                            {horas.map((h) => (
+                              <Picker.Item key={h} label={h} value={h} />
+                            ))}
+                          </Picker>
+                        </View>
+                        <View style={styles.pickerColumn}>
+                          <Text style={styles.pickerLabel}>Fin</Text>
+                          <Picker
+                            selectedValue={franjas[0]?.fin || ''}
+                            onValueChange={(v) => actualizarFranja(dia, 0, 'fin', v)}
+                            style={styles.picker}
+                          >
+                            <Picker.Item label="Hora..." value="" />
+                            {horas.map((h) => (
+                              <Picker.Item key={h} label={h} value={h} />
+                            ))}
+                          </Picker>
+                        </View>
+                      </View>
+                    )}
+                  </View>
+                );
+              })}
+            </View>
+
+            <Text style={styles.sectionTitle}>Servicios ofrecidos</Text>
+            <View style={styles.chipContainer}>
+              {servicios.map((servicio: any) => (
+                <Chip key={servicio.id} selected={serviciosSeleccionados.includes(servicio.id)} onPress={() => toggleServicio(servicio.id)} style={styles.chip}>
+                  {servicio.nombre}
+                </Chip>
+              ))}
+            </View>
+
+            <Button mode="contained" onPress={handleSubmit} loading={submitting} disabled={submitting} style={styles.button}>
+              Guardar cambios
+            </Button>
+
+            <Button mode="outlined" onPress={pickGalleryImage} style={{ marginTop: 12 }}>
+              Subir imagen a galería
+            </Button>
+          </Surface>
         </Animated.View>
       </ScrollView>
     </BaseLayout>
