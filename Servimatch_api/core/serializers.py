@@ -457,7 +457,8 @@ class ChatSerializer(serializers.ModelSerializer):
 class NotificacionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notificacion
-        fields = ['id', 'cliente', 'trabajador', 'creado']
+        fields = ['id', 'usuario', 'mensaje', 'leido', 'tipo', 'fecha']
+
 
 
 class PagoServicioSerializer(serializers.ModelSerializer):

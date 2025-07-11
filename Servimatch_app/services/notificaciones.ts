@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Reemplaza esto con la IP real de tu backend si no usas localhost en dispositivo físico
-const API_BASE = 'http://192.168.100.4:8000/api';
+const API_BASE = 'http://192.168.0.186:8000/api';
 
 export async function obtenerNotificaciones(token: string) {
   const response = await axios.get(`${API_BASE}/notificaciones/`, {
