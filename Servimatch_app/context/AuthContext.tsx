@@ -38,7 +38,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
 
       try {
-        const res = await fetch('http://192.168.0.186:8000/api/usuarios/me/', {
+        const res = await fetch('http://192.168.100.9:8000/api/usuarios/me/', {
           headers: {
             Authorization: `Bearer ${tokens.access}`,
           },

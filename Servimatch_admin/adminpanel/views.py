@@ -3,7 +3,7 @@ from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse, HttpResponse
 
-API_BASE_URL = 'http://192.168.0.186:8000/api'
+API_BASE_URL = 'http://192.168.100.9:8000/api'
 
 def usuarios_admin(request):
     return render(request, 'usuarios_admin.html')
