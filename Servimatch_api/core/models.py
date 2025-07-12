@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
+from django.conf import settings
 
 class Usuario(AbstractUser):
     ROL_CHOICES = [
@@ -38,7 +39,19 @@ class Servicio(models.Model):
 
     def __str__(self):
         return self.nombre
-    
+
+class Feedback(models.Model):
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='feedbacks')
+    mensaje = models.TextField()
+    respuesta = models.TextField(blank=True, null=True)
+    tipo = models.CharField(max_length=50, blank=True)  # Ej: "soporte", "problema", etc.
+    role = models.CharField(max_length=20, blank=True)  # "cliente" o "trabajador"
+    respondido = models.BooleanField(default=False)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'Feedback #{self.id} de {self.usuario.username}'
+
 class Profesion(models.Model):
     nombre      = models.CharField(max_length=100, unique=True)
     descripcion = models.TextField(blank=True)

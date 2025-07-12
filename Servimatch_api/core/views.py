@@ -41,6 +41,35 @@ import time
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
+class FeedbackViewSet(viewsets.ModelViewSet):
+    queryset = Feedback.objects.all().order_by('-fecha_creacion')
+    serializer_class = FeedbackSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(usuario=self.request.user, role='cliente' if hasattr(self.request.user, 'cliente') else 'trabajador')
+
+    @action(detail=True, methods=['post'])
+    def respuesta(self, request, pk=None):
+        feedback = self.get_object()
+        respuesta = request.data.get('respuesta')
+        if not respuesta:
+            return Response({'error': 'Debes ingresar una respuesta'}, status=400)
+
+        feedback.respuesta = respuesta
+        feedback.respondido = True
+        feedback.save()
+
+        # Enviar correo
+        send_mail(
+            subject='Respuesta a tu feedback - ServiMatch',
+            message=f'Tu mensaje: "{feedback.mensaje}"\n\nRespuesta del administrador: "{respuesta}"',
+            from_email='servimatch61@gmail.com',  # este será configurado abajo
+            recipient_list=[feedback.usuario.email],
+            fail_silently=False,
+        )
+
+        return Response({'ok': True})
+
 class UsuarioViewSet(viewsets.ModelViewSet):
     queryset = Usuario.objects.all()
     serializer_class = UsuarioSerializer

@@ -46,7 +46,12 @@ REST_FRAMEWORK = {
     ),
 }
 
-CORS_ALLOW_ALL_ORIGINS = True  # SÓLO PARA DESARROLLO
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:9020",  # solo lo que usarás en desarrollo
+]
+
 
 ROOT_URLCONF = 'Servimatch_api.urls'
 
@@ -117,3 +122,12 @@ FLOW_SECRET_KEY = config("FLOW_SECRET_KEY")
 FLOW_API_URL = "https://sandbox.flow.cl/api"
 
 APPEND_SLASH = True
+
+# Configuración de envío de correos con Gmail
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'servimatch61@gmail.com'  # ← tu correo Gmail real
+EMAIL_HOST_PASSWORD = 'ukfpjrcjjxscdgng'     # ← tu contraseña de aplicación SIN espacios
+DEFAULT_FROM_EMAIL = 'ServiMatch <servimatch61@gmail.com>'  # ← Usa el mismo correo

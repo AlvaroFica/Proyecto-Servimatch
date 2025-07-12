@@ -62,7 +62,7 @@ export default function NuevaSolicitudScreen() {
     if (!tokens?.access) return;
     (async () => {
       try {
-        const res = await fetch('http://192.168.100.9:8000/api/servicios/', {
+        const res = await fetch('http://192.168.9.6:8000/api/servicios/', {
 
           headers: { Authorization: `Bearer ${tokens.access}` },
         });
@@ -156,7 +156,7 @@ export default function NuevaSolicitudScreen() {
 
     setLoading(true);
     try {
-      const res = await fetch('http://192.168.100.9:8000/api/solicitudes/', {
+      const res = await fetch('http://192.168.9.6:8000/api/solicitudes/', {
 
         method: 'POST',
         headers: {

@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import (
     Usuario, Cliente, Servicio, Profesion, Trabajador, ExperienciaProfesional,
     FotoTrabajador, Calificacion, Solicitud, Pago, Etiqueta,
-    EtiquetaCalificacion, PlanServicio, Reserva, PagoServicio, PagoSolicitud )
+    EtiquetaCalificacion, PlanServicio, Reserva, PagoServicio, PagoSolicitud, Feedback )
 from django.db.models import Avg 
 import json   
 
@@ -20,6 +20,7 @@ class ExperienciaProfesionalSerializer(serializers.ModelSerializer):
         model = ExperienciaProfesional
         fields = ['profesion', 'anos_experiencia', 'descripcion_breve', 'idiomas']
 
+
 class FotoTrabajadorSerializer(serializers.ModelSerializer):
     imagen = serializers.ImageField(use_url=True)
 
@@ -27,6 +28,11 @@ class FotoTrabajadorSerializer(serializers.ModelSerializer):
         model = FotoTrabajador
         fields = ['id', 'imagen', 'titulo']
        
+class FeedbackSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Feedback
+        fields = '__all__'
+        read_only_fields = ['usuario', 'fecha_creacion', 'respondido', 'respuesta']
 
 class ServicioSerializer(serializers.ModelSerializer):
     class Meta:

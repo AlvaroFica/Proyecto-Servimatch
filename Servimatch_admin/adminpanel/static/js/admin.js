@@ -1,4 +1,4 @@
-API_BASE_URL = 'https://Recnok.pythonanywhere.com/api'
+const API_BASE_URL = 'http://localhost:8000/api';
 
 function abrirVentana(url, titulo) {
   document.querySelector('.overlay').style.display = 'block';
@@ -20,7 +20,11 @@ function abrirVentana(url, titulo) {
         document.body.appendChild(s);
       });
     })
-    .catch(() => contenedor.innerHTML = '<p>Error al cargar contenido.</p>');
+    .catch(err => {
+      console.error('Error cargando usuarios:', err);
+      const tbody = document.getElementById('usuarios-body');
+      tbody.innerHTML = '<tr><td colspan="4">Error cargando usuarios.</td></tr>';
+    });
 }
 
 
@@ -29,7 +33,7 @@ function cerrarVentana() {
   document.getElementById('ventanaContenido').style.display = 'none';
 }
 
-fetch(`${API}/feedback/?estado=pending`, {
+fetch(`${API_BASE_URL}/feedback/?estado=pending`, {
   headers: { 'X-Requested-With': 'XMLHttpRequest' }
 })
   .then(res => res.json())
