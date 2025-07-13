@@ -23,6 +23,8 @@ from rest_framework.decorators import api_view, permission_classes
 from django.contrib.auth import get_user_model
 from .models import Trabajador, Cliente, Chat, Mensaje
 import json  
+from django.http import JsonResponse
+from urllib.parse import parse_qs
 
 from django.db import models  
 
@@ -391,6 +393,7 @@ class PlanServicioViewSet(viewsets.ModelViewSet):
                 return PlanServicio.objects.filter(trabajador=trabajador)
             except Trabajador.DoesNotExist:
                 return PlanServicio.objects.none()
+        return PlanServicio.objects.all()
 
         if hasattr(self.request.user, 'trabajador_profile'):
             return PlanServicio.objects.filter(trabajador=self.request.user.trabajador_profile)
@@ -895,3 +898,15 @@ def confirmar_pago_solicitud_flow(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def mis_planes(request):
+    try:
+        trabajador = request.user.trabajador_profile
+    except Trabajador.DoesNotExist:
+        return Response([], status=200)
+
+    planes = PlanServicio.objects.filter(trabajador=trabajador)
+    serializer = PlanServicioSerializer(planes, many=True)
+    return Response(serializer.data)
