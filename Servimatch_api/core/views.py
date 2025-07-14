@@ -162,14 +162,22 @@ class TrabajadorViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_fields = ['profesion']    # ahora filtra por ?profesion=<id>
 
 class ServicioViewSet(viewsets.ModelViewSet):
-    queryset = Servicio.objects.all()
+    queryset = Servicio.objects.all()  # ✅ esto es lo que falta
     serializer_class = ServicioSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        profesion_id = self.request.query_params.get('profesion_id')
+        if profesion_id:
+            return Servicio.objects.filter(profesion_id=profesion_id)
+        return super().get_queryset()
+
 
 class SolicitudViewSet(viewsets.ModelViewSet):
     queryset = Solicitud.objects.all()
     serializer_class = SolicitudSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    
 
     def get_queryset(self):
         # Solo devolvemos las solicitudes del cliente autenticado en list
@@ -526,15 +534,19 @@ class StripeCancelRedirectView(View):
 def top_trabajadores(request):
     print("👉 Entrando al endpoint de ranking")
 
-    trabajadores = (
-        Trabajador.objects
-        .annotate(rating_promedio=Avg('calificaciones_recibidas__puntuacion'))
-        .order_by('-rating_promedio')[:10]
-    )
+    profesion_id = request.query_params.get('profesion')
+    trabajadores = Trabajador.objects.all()
+
+    if profesion_id:
+        print(f"🔎 Filtrando por profesión ID: {profesion_id}")
+        trabajadores = trabajadores.filter(profesion__id=profesion_id)
+
+    trabajadores = trabajadores.annotate(
+        rating_promedio=Avg('calificaciones_recibidas__puntuacion')
+    ).order_by('-rating_promedio')[:10]
 
     serializer = TrabajadorSerializer(trabajadores, many=True)
     return Response(serializer.data)
-
 
 
 

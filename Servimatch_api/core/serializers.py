@@ -31,7 +31,8 @@ class FotoTrabajadorSerializer(serializers.ModelSerializer):
 class ServicioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Servicio
-        fields = ['id', 'nombre', 'descripcion']
+        fields = ['id', 'nombre', 'descripcion', 'profesion']
+
 
 class TrabajadorSerializer(serializers.ModelSerializer):
     id           = serializers.IntegerField(source='usuario.id', read_only=True)
@@ -41,7 +42,11 @@ class TrabajadorSerializer(serializers.ModelSerializer):
     biografia    = serializers.CharField(source='usuario.biografia', required=False, allow_blank=True)
     latitud      = serializers.FloatField(required=False)
     longitud     = serializers.FloatField(required=False)
-    profesion    = serializers.StringRelatedField()
+
+    profesion_id = serializers.SerializerMethodField()
+    profesion = serializers.IntegerField(source='profesion.id', read_only=True)
+    profesion_nombre = serializers.CharField(source='profesion.nombre', read_only=True)
+
     rating       = serializers.SerializerMethodField()
     galeria      = FotoTrabajadorSerializer(source='fotos', many=True, read_only=True)
     servicios    = ServicioSerializer(many=True, read_only=True)  # ← este es el cambio clave
@@ -51,10 +56,17 @@ class TrabajadorSerializer(serializers.ModelSerializer):
         fields = [
           'id',
           'nombre', 'apellido', 'foto_perfil', 'biografia',
-          'profesion', 'rating',
+          'profesion_id', 'profesion_nombre', 'rating',
           'disponibilidad', 'latitud', 'longitud', 'servicios',
-          'galeria',
+          'galeria', 'profesion',
         ]
+    def get_profesion(self, obj):
+        return obj.profesion.id if obj.profesion else None
+
+    def get_profesion_id(self, obj):
+        if obj.profesion:
+            return obj.profesion.id
+        return None
 
     def get_rating(self, obj):
         agg = obj.calificaciones_recibidas.aggregate(avg=Avg('puntuacion'))
@@ -139,7 +151,10 @@ class UsuarioSerializer(serializers.ModelSerializer):
     trabajador  = serializers.DictField(write_only=True, required=False)
     servicios = serializers.PrimaryKeyRelatedField(queryset=Servicio.objects.all(), many=True, write_only=True, required=False)
     disponibilidad = serializers.CharField(write_only=True, required=False)
-    
+    profesion_id = serializers.SerializerMethodField(read_only=True)  # 👈 Agregado
+    trabajador_profile = TrabajadorSerializer(read_only=True)
+
+
     class Meta:
         model  = Usuario
         fields = [
@@ -148,11 +163,26 @@ class UsuarioSerializer(serializers.ModelSerializer):
             'nombre', 'apellido', 'telefono',
             'rol', 'direccion', 'latitud', 'longitud',
             'trabajador', 'servicios', 'disponibilidad',
+            'profesion_id', 'trabajador_profile', # 👈 Agregado aquí también
+
         ]
         extra_kwargs = {
             'password':      {'write_only': True},
             'es_trabajador': {'read_only': True},
         }
+    # serializers.py
+
+    def get_profesion_id(self, obj):
+        try:
+            return obj.trabajador_profile.profesion.id if obj.trabajador_profile and obj.trabajador_profile.profesion else None
+        except:
+            return None
+
+    def get_profesion_id(self, obj):
+        try:
+            return obj.trabajador.profesion.id if obj.trabajador and obj.trabajador.profesion else None
+        except:
+            return None
 
     def create(self, validated_data):
         rol_data = self.initial_data.get('rol')
