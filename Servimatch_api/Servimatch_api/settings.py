@@ -58,7 +58,7 @@ ROOT_URLCONF = 'Servimatch_api.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'core', 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -131,3 +131,7 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'servimatch61@gmail.com'  # ← tu correo Gmail real
 EMAIL_HOST_PASSWORD = 'ukfpjrcjjxscdgng'     # ← tu contraseña de aplicación SIN espacios
 DEFAULT_FROM_EMAIL = 'ServiMatch <servimatch61@gmail.com>'  # ← Usa el mismo correo
+
+LOGIN_URL = '/admin/login/'
+LOGIN_REDIRECT_URL = '/admin/pagos-pendientes/'  # Redirige luego de login exitoso
+LOGOUT_REDIRECT_URL = '/admin/login/'            # Opcional: redirige tras logout

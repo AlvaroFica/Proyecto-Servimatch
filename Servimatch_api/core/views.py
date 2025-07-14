@@ -27,8 +27,11 @@ import json
 from django.db import models  
 
 from django.views.decorators.csrf import csrf_exempt
-
+from rest_framework_simplejwt.views import TokenObtainPairView
 from geopy.geocoders import Nominatim
+
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.decorators import login_required
 
 #Para pasarela de pago
 import stripe
@@ -38,15 +41,84 @@ import hmac
 import hashlib
 import requests
 import time
+from django.core.mail import send_mail
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
+
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
+
+def enviar_correo_respuesta(feedback):
+    asunto = "Respuesta a tu mensaje en ServiMatch"
+    destinatario = feedback.usuario.email
+
+    html_content = f"""
+    <html>
+    <body style="font-family: Arial, sans-serif; color: #333;">
+      <div style="max-width:600px; margin:auto; border:1px solid #eee; padding:20px;">
+        <img src="https://i.imgur.com/JvTNNbo.jpg" style="width:100%; border-radius:8px;" alt="Banner ServiMatch">
+
+        <h2 style="color:#4b3c91;">Hola {feedback.usuario.nombre},</h2>
+        <p>Gracias por escribirnos. Aquí tienes la respuesta a tu mensaje:</p>
+
+        <div style="background:#f3ebff; padding:1rem; border-radius:8px; margin:1rem 0;">
+          <strong>Tu mensaje:</strong><br>
+          {feedback.mensaje}
+        </div>
+
+        <div style="background:#e6f5ea; padding:1rem; border-radius:8px; margin:1rem 0;">
+          <strong>Respuesta del equipo:</strong><br>
+          {feedback.respuesta}
+        </div>
+
+        <p style="margin-top:2rem;">Un saludo,<br><strong>Equipo ServiMatch</strong></p>
+      </div>
+    </body>
+    </html>
+    """
+
+    msg = EmailMultiAlternatives(
+        subject=asunto,
+        body="Tu mensaje ha sido respondido en ServiMatch.",
+        from_email="ServiMatch <servimatch61@gmail.com>",
+        to=[destinatario]
+    )
+    msg.attach_alternative(html_content, "text/html")
+    msg.send()
+
+def login_admin_view(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None and user.es_admin:
+            login(request, user)
+            return redirect('dashboard_admin')
+        else:
+            error = "Credenciales inválidas o no eres administrador."
+            return render(request, 'admin_login.html', {'error': error})
+
+    return render(request, 'admin_login.html')
+
+@login_required
+def dashboard_admin_view(request):
+    if not request.user.es_admin:
+        return redirect('login_admin')
+    return render(request, 'dashboard_admin.html')
 
 class FeedbackViewSet(viewsets.ModelViewSet):
     queryset = Feedback.objects.all().order_by('-fecha_creacion')
     serializer_class = FeedbackSerializer
 
     def perform_create(self, serializer):
-        serializer.save(usuario=self.request.user, role='cliente' if hasattr(self.request.user, 'cliente') else 'trabajador')
+        serializer.save(
+            usuario=self.request.user,
+            role='cliente' if hasattr(self.request.user, 'cliente') else 'trabajador'
+        )
 
     @action(detail=True, methods=['post'])
     def respuesta(self, request, pk=None):
@@ -59,16 +131,23 @@ class FeedbackViewSet(viewsets.ModelViewSet):
         feedback.respondido = True
         feedback.save()
 
-        # Enviar correo
-        send_mail(
-            subject='Respuesta a tu feedback - ServiMatch',
-            message=f'Tu mensaje: "{feedback.mensaje}"\n\nRespuesta del administrador: "{respuesta}"',
-            from_email='servimatch61@gmail.com',  # este será configurado abajo
-            recipient_list=[feedback.usuario.email],
-            fail_silently=False,
+        html = render_to_string('emails/respuesta_feedback.html', {
+            'nombre': feedback.usuario.nombre,
+            'mensaje': feedback.mensaje,
+            'respuesta': respuesta
+        })
+
+        msg = EmailMultiAlternatives(
+            subject='Respuesta a tu mensaje en ServiMatch',
+            body='Tu mensaje ha sido respondido.',
+            from_email='ServiMatch <servimatch61@gmail.com>',
+            to=[feedback.usuario.email]
         )
+        msg.attach_alternative(html, "text/html")
+        msg.send()
 
         return Response({'ok': True})
+
 
 class UsuarioViewSet(viewsets.ModelViewSet):
     queryset = Usuario.objects.all()

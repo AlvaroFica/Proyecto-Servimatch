@@ -1,12 +1,9 @@
 {% extends 'base_admin.html' %}
-{% block title %}Dashboard{% endblock %}
-{% block page_title %}Dashboard{% endblock %}
+{% load static %}
+{% block title %}Notificaciones{% endblock %}
+{% block page_title %}Notificaciones{% endblock %}
 {% block content %}
 <style>
-  body {
-    background: #f4f7fc;
-  }
-
   .notificaciones-wrapper {
     display: flex;
     flex-direction: column;
@@ -18,6 +15,7 @@
     display: flex;
     gap: 2rem;
     margin-bottom: 2rem;
+    position: relative;
   }
 
   .icono-notificacion {
@@ -40,6 +38,22 @@
     font-size: .8rem;
     margin-top: .3rem;
     color: #444;
+  }
+
+  .notificacion-contador {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #e74c3c;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: bold;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 
   .contenido-notificaciones {
@@ -81,11 +95,13 @@
 <div class="notificaciones-wrapper">
   <div class="notificaciones-iconos">
     <div class="icono-notificacion" onclick="toggleNotificaciones('clientes')">
-      <img src="/static/icons/usuarios_icon.png">
+      <div id="clientes-contador" class="notificacion-contador">0</div>
+      <img src="{% static 'icons/usuarios_icon.png' %}">
       <span>Clientes</span>
     </div>
     <div class="icono-notificacion" onclick="toggleNotificaciones('pagos')">
-      <img src="/static/icons/boleta_icon.png">
+      <div id="pagos-contador" class="notificacion-contador">0</div>
+      <img src="{% static 'icons/boleta_icon.png' %}">
       <span>Pagos</span>
     </div>
   </div>
@@ -107,20 +123,23 @@
     document.getElementById('notificaciones-' + tipo).classList.add('active');
   }
 
-  async function cargarFeedback(tipo, destino) {
+  async function cargarFeedback(tipo, destino, contadorId) {
     try {
-      let r = await fetch('http://127.0.0.1:8000/api/feedback/');
+      let r = await fetch('http://127.0.0.1:8000/api/feedback/');  // Verifica esta URL
       let data = await r.json();
       let contenedor = document.getElementById(destino);
+      const contador = document.getElementById(contadorId);
       contenedor.innerHTML = '';
 
       const filtrados = data.filter(f => {
         if (!f.respuesta || f.respuesta.trim() === '') {
           const isCliente = f.usuario && !f.usuario.trabajador;
-          return (tipo === 'cliente' && isCliente) || (tipo === 'pago' && !isCliente);
+          return (tipo === 'clientes' && isCliente) || (tipo === 'pagos' && !isCliente);
         }
         return false;
       });
+
+      contador.textContent = filtrados.length; // Actualiza el contador
 
       if (filtrados.length === 0) {
         contenedor.innerHTML = '<li>No hay reclamos pendientes.</li>';
@@ -131,13 +150,36 @@
           contenedor.appendChild(li);
         });
       }
-    } catch {
+    } catch (error) {
+      console.error('Error al cargar feedback:', error);
       document.getElementById(destino).innerHTML = '<li>Error al cargar feedback.</li>';
     }
   }
 
-  cargarFeedback('cliente', 'listaReclamosClientes');
-  cargarFeedback('pago', 'listaReclamosPagos');
+  cargarFeedback('clientes', 'listaReclamosClientes', 'clientes-contador');
+  cargarFeedback('pagos', 'listaReclamosPagos', 'pagos-contador');
+
+  async function cargarNotificaciones() {
+    try {
+      // Realizamos una petición al API para obtener las notificaciones (en este caso feedback)
+      let response = await fetch('http://127.0.0.1:8000/api/feedback/');
+      let data = await response.json();
+
+      // Filtramos las notificaciones pendientes
+      const notificacionesPendientes = data.filter(feedback => !feedback.respuesta || feedback.respuesta.trim() === '');
+
+      // Actualizamos el número en el contador de notificaciones
+      document.getElementById('noti-count').textContent = notificacionesPendientes.length;
+
+    } catch (error) {
+      console.error('Error al cargar las notificaciones:', error);
+      document.getElementById('noti-count').textContent = '0';
+    }
+  }
+
+  // Llamamos a la función para cargar las notificaciones al cargar la página
+  cargarNotificaciones();
+
 </script>
 
 {% endblock %}

@@ -1,6 +1,8 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
+from rest_framework_simplejwt.views import TokenRefreshView
+
 from .views import (
     ProfesionViewSet,
     PlanServicioViewSet,
@@ -17,6 +19,9 @@ from .views import (
     listar_pagos_usuario,
     IniciarPagoSolicitudFlowView,
     confirmar_pago_solicitud_flow,
+    FeedbackViewSet,
+    login_admin_view, dashboard_admin_view,
+    CustomTokenObtainPairView, 
 )
 from django.conf import settings
 from django.conf.urls.static import static
@@ -38,6 +43,7 @@ router.register(r'reservas', ReservaViewSet, basename='reserva')
 router.register(r'fotos-trabajador', views.GaleriaTrabajadorViewSet, basename='fotos-trabajador')
 router.register(r'chats', views.ChatViewSet, basename='chat')
 router.register('notificaciones', views.NotificacionViewSet, basename='notificaciones')
+router.register(r'feedback', FeedbackViewSet, basename='feedback')
 
 
 urlpatterns = [
@@ -57,8 +63,10 @@ urlpatterns = [
     path('pagos/', listar_pagos_usuario),
     path('flow/iniciar-pago-solicitud/', IniciarPagoSolicitudFlowView.as_view()),
     path('flow/confirmacion-solicitud/', confirmar_pago_solicitud_flow),
-
     path('', include(router.urls)),
+    path('token/', views.CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    
 ]
 
 

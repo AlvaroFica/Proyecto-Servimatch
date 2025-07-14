@@ -24,10 +24,11 @@
     <div class="dock-icon" onclick="abrirVentana('/dashboard-admin/feedback-tipo/', 'Gráficos')" data-label="Gráficos">
       <img src="{% static 'icons/graficos_icon.png' %}">
     </div>
-    <div class="dock-icon" id="notificaciones-icon" data-label="Notificaciones">
+    <div class="dock-icon" onclick="abrirVentana('/dashboard-admin/notificaciones_dashboard/', 'Notificaciones')" data-label="Notificaciones">
       <img src="{% static 'icons/notificaciones_icon.png' %}">
       <span id="noti-count">0</span>
     </div>
+
   </div>
 
   <!-- Navbar con saludo y logout -->
@@ -36,13 +37,30 @@
 
     <nav style="display: flex; align-items: center; gap: 1rem;">
       <a href="{% url 'dashboard_admin' %}" class="{% if request.resolver_match.url_name == 'dashboard_admin' %}active{% endif %}">🏠 Dashboard</a>
-      <a href="{% url 'acciones' %}" class="{% if request.resolver_match.url_name == 'acciones' %}active{% endif %}">📜 Logs</a>
-
-      <span style="color: #fff; font-weight: 500;">
-        👋 Hola, Javier DIaz
-      </span>
+      <a href="{% url 'acciones' %}" class="{% if request.resolver_match.url_name == 'acciones' %}active{% endif %}">
+        📜 Logs
+        <span id="noti-count" style="display: none;"></span>
+      </a>
     </nav>
+      <div class="logout-container">
+        <form action="{% url 'logout_admin' %}" method="post">
+          {% csrf_token %}
+          <button type="submit" style="
+            background-color: white;
+            color: #4A90E2;
+            border: 2px solid #4A90E2;
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+          ">
+            🔒 Cerrar sesión
+          </button>
+        </form>
+      </div>
   </div>
+
 
   <!-- Contenido principal -->
   <main>

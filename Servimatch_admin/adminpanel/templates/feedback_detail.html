@@ -3,9 +3,27 @@
 {% block page_title %}Detalle Mensaje{% endblock %}
 {% block content %}
 <p><strong>{{ role }}</strong> – {{ user.nombre }} {{ user.apellido }} – {{ user.rut }}</p>
+
 {% if user.foto_perfil %}
   <img src="{{ user.foto_perfil }}" style="width:100px;height:100px;border-radius:50%;object-fit:cover">
 {% endif %}
+
 <h3>Mensaje completo</h3>
-<p>{{ feedback.mensaje }}</p>
+<p style="background:#f5f5f5; padding:1rem; border-radius:8px;">{{ feedback.mensaje }}</p>
+
+{% if feedback.respuesta %}
+  <h3>Respuesta enviada</h3>
+  <p style="background:#e6f5ea; padding:1rem; border-radius:8px;">{{ feedback.respuesta }}</p>
+{% else %}
+  <h3>Responder</h3>
+  <form method="post">
+    {% csrf_token %}
+    <textarea name="respuesta" rows="4" style="width:100%; padding:0.8rem; border-radius:6px;" placeholder="Escribe tu respuesta aquí..."></textarea>
+    <br><br>
+    <button type="submit" style="background:#4b3c91; color:white; padding:0.6rem 1.2rem; border-radius:8px; border:none; font-weight:600;">
+      Enviar respuesta
+    </button>
+  </form>
+{% endif %}
+
 {% endblock %}
