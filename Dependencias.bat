@@ -21,5 +21,7 @@ pip install djangorestframework-simplejwt
 pip install geopy
 pip install stripe
 
+pause
+
 
 
