@@ -13,7 +13,7 @@ class Usuario(AbstractUser):
     es_trabajador = models.BooleanField(default=False)
     foto_perfil   = models.ImageField(upload_to='perfiles/', null=True, blank=True)
     biografia     = models.TextField(blank=True)
-
+    es_admin = models.BooleanField(default=False)
     direccion = models.CharField(max_length=255, blank=True)
     latitud   = models.FloatField(null=True, blank=True)
     longitud  = models.FloatField(null=True, blank=True)

@@ -156,3 +156,23 @@ main {
   border-radius: 6px;
   cursor: pointer;
 }
+.logout-wrapper {
+  margin-right: 0.5rem;
+}
+
+.btn-logout {
+  background-color: transparent;
+  color: #fff;
+  border: 2px solid #fff;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-logout:hover {
+  background-color: #fff;
+  color: var(--primary);
+}

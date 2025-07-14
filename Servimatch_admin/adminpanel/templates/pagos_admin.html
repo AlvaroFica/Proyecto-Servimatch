@@ -1,155 +1,65 @@
 {% extends 'base_admin.html' %}
+
 {% block title %}Pagos Pendientes{% endblock %}
-{% block page_title %}Pagos Pendientes por Trabajador{% endblock %}
+{% block page_title %}Pagos Pendientes{% endblock %}
 
 {% block content %}
 <style>
-  .card-pago {
-    background: #fff;
-    border-radius: 20px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    padding: 1.5rem;
-    transition: transform 0.2s ease;
-  }
-
-  .card-pago:hover {
-    transform: translateY(-3px);
-  }
-
-  .card-pago h3 {
-    font-size: 1.2rem;
-    color: #4b3c91;
-    margin-bottom: 1rem;
-  }
-
-  .card-pago ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-
-  .card-pago li {
-    padding: 0.75rem 1rem;
-    border: 1px solid #ddd;
-    border-radius: 12px;
-    margin-bottom: 0.75rem;
-    background: #f9f9f9;
-    font-size: 0.95rem;
-  }
-
-  .card-pago button {
-    margin-top: 0.5rem;
-    padding: 0.4rem 1.1rem;
-    border: none;
-    background: #4b3c91;
-    color: white;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    cursor: pointer;
-  }
-
-  .card-pago button:hover {
-    background: #6a56bd;
-  }
-
-  .grid-pagos {
-    width: 90%;
-    max-width: 1200px;
-    margin: 3rem auto 5rem;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 2rem;
-  }
-
-  .empty-msg {
-    text-align: center;
-    font-size: 1.1rem;
-    color: #666;
-    margin-top: 2rem;
-  }
-
-  .filtro-box {
-    width: 90%;
-    max-width: 1200px;
-    margin: 2rem auto 1rem;
-  }
-
-  .filtro-box input {
+  .tabla-pagos {
     width: 100%;
-    padding: 0.75rem 1rem;
-    font-size: 1rem;
-    border-radius: 12px;
-    border: 1px solid #ccc;
+    border-collapse: collapse;
+    min-width: 800px;
+  }
+  .tabla-pagos th, .tabla-pagos td {
+    padding: 1rem;
+    text-align: left;
+    font-size: 0.95rem;
+    border-bottom: 1px solid #eee;
+  }
+  .tabla-pagos th {
+    background: #e1d8ff;
+    font-weight: 600;
+    color: #4b3c91;
+  }
+  .tabla-pagos td {
+    color: #333;
+  }
+  .tabla-pagos tr:nth-child(even) td {
+    background: #faf7ff;
   }
 </style>
 
-<div class="filtro-box">
-  <input id="filtroTrabajador" type="text" placeholder="Buscar trabajador por nombre o apellido...">
-</div>
-
-<p>DEBUG: {{ trabajadores|length }} trabajadores encontrados</p>
-
-{% if trabajadores %}
-  <div class="grid-pagos">
-    {% for t in trabajadores %}
-      <div class="card-pago">
-        <h3>{{ t.usuario.nombre }} {{ t.usuario.apellido }}</h3>
-        <p>DEBUG usuario: {{ t.usuario }}</p>
-        <ul>
-          {% for c in t.citas_pendientes %}
-            <li>
-              <strong>🧾 Boleta de Pago</strong><br>
-              <small>ID Solicitud: {{ c.solicitud.id }}</small><br>
-              Cliente: {{ c.solicitud.cliente.usuario.nombre }} {{ c.solicitud.cliente.usuario.apellido }}<br>
-              Servicio: {{ c.solicitud.servicio.nombre }}<br>
-              Monto: ${{ c.monto }}<br>
-              Ubicación: {{ c.solicitud.ubicacion }}<br>
-              Fecha preferida: {{ c.solicitud.fecha_preferida|date:"d/m/Y H:i" }}<br>
-              Fecha de pago: {{ c.fecha_pago|date:"d/m/Y H:i" }}<br>
-              Estado: {% if c.liberado %}
-                <span style="color: green;">Liberado</span>
-              {% else %}
-                <span style="color: orange;">Pendiente</span>
-              {% endif %}<br>
-
-              <button onclick="liberarPago({{ c.pago_id }})">Liberar Pago</button>
-            </li>
-          {% endfor %}
-        </ul>
-      </div>
-    {% endfor %}
+<div class="wrapper-citas">
+  <div class="card-citas">
+    <table class="tabla-pagos">
+      <thead>
+        <tr>
+          <th>Trabajador</th>
+          <th>Cita ID</th>
+          <th>Monto</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for trabajador in trabajadores %}
+          <tr>
+            <td>{{ trabajador.nombre }}</td>
+            <td>
+              {% for cita in trabajador.citas_pendientes %}
+                <div>Cita #{{ cita.id }} - {{ cita.monto }} CLP</div>
+              {% endfor %}
+            </td>
+            <td>
+              <button class="styled-btn">Liberar Pago</button>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="4" style="text-align:center;">No hay pagos pendientes.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
-{% else %}
-  <p class="empty-msg">No hay trabajadores con pagos pendientes.</p>
-{% endif %}
-
-<script>
-function liberarPago(id){
-  fetch(`http://127.0.0.1:8000/api/boletas/${id}/liberar/`, {
-    method: 'PATCH',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({estado_pago: 'pagado'})
-  }).then(r => {
-    if(r.ok) {
-      const btn = document.querySelector(`button[onclick="liberarPago(${id})"]`);
-      const li = btn.closest('li');
-      li.remove();
-      const ul = btn.closest('ul');
-      if (ul.children.length === 0) {
-        btn.closest('.card-pago').remove();
-      }
-    } else {
-      alert('Error al liberar el pago');
-    }
-  });
-}
-
-document.getElementById('filtroTrabajador').addEventListener('input', function(){
-  const val = this.value.toLowerCase();
-  document.querySelectorAll('.card-pago').forEach(card => {
-    const name = card.querySelector('h3').textContent.toLowerCase();
-    card.style.display = name.includes(val) ? 'block' : 'none';
-  });
-});
-</script>
+</div>
 {% endblock %}
