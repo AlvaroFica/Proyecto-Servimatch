@@ -32,7 +32,8 @@ interface Worker {
   nombre: string;
   apellido: string;
   foto_perfil?: string;
-  profesion: string;
+  profesion: number;
+  profesion_nombre: string;
   rating: number;
   servicios: number[];
 }
@@ -56,7 +57,7 @@ const StarRating: React.FC<{ rating: number }> = ({ rating }) => {
 export default function RankingScreen() {
   const router = useRouter();
   const [profesiones, setProfesiones] = useState<Profesion[]>([]);
-  const [selectedProfesion, setSelectedProfesion] = useState<string | undefined>();
+  const [selectedProfesion, setSelectedProfesion] = useState<number | undefined>();
   const [workers, setWorkers] = useState<Worker[]>([]);
   const [loading, setLoading] = useState(true);
   const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -68,16 +69,21 @@ export default function RankingScreen() {
       .catch(console.error);
   }, []);
 
+
   useEffect(() => {
     setLoading(true);
-    fetch(`${API_BASE_URL}/api/ranking/trabajadores/`)
+
+    const url = selectedProfesion
+      ? `${API_BASE_URL}/api/ranking/trabajadores/?profesion=${selectedProfesion}`
+      : `${API_BASE_URL}/api/ranking/trabajadores/`;
+
+    console.log('Cargando ranking para profesion:', selectedProfesion); // TEMPORAL PARA DEPURAR
+
+    fetch(url)
       .then(res => res.json())
       .then((data: Worker[]) => {
         const applyFilter = () => {
-          const filtrados = selectedProfesion
-            ? data.filter(w => w.profesion === selectedProfesion)
-            : data;
-          setWorkers(filtrados);
+          setWorkers(data); // ya viene filtrado desde backend
           setLoading(false);
           Animated.timing(fadeAnim, {
             toValue: 1,
@@ -85,14 +91,19 @@ export default function RankingScreen() {
             useNativeDriver: true,
           }).start();
         };
+
         Animated.timing(fadeAnim, {
           toValue: 0,
           duration: 300,
           useNativeDriver: true,
         }).start(() => applyFilter());
       })
-      .catch(console.error);
+      .catch(error => {
+        console.error('Error al cargar ranking:', error);
+        setLoading(false);
+      });
   }, [selectedProfesion]);
+
 
   const getTopAndNext = (list: Worker[]) => {
     const top3: (Worker | null)[] = list.slice(0, 3);
@@ -125,16 +136,21 @@ export default function RankingScreen() {
         <View style={styles.pickerContainer}>
           <Picker
             selectedValue={selectedProfesion}
-            onValueChange={(value: string) => setSelectedProfesion(value)}
+            onValueChange={(value: string | number) => {
+              const parsed = Number(value);
+              setSelectedProfesion(isNaN(parsed) ? undefined : parsed);
+            }}
             style={styles.picker}
             itemStyle={styles.pickerItem}
           >
             <Picker.Item label="Todas las profesiones" value={undefined} />
             {profesiones.map(p => (
-              <Picker.Item key={p.id} label={p.nombre} value={p.nombre} />
+              <Picker.Item key={p.id} label={p.nombre} value={p.id} />
             ))}
           </Picker>
         </View>
+
+
 
         <Text style={styles.sectionTitle}>Top 3 Destacados</Text>
         <View style={styles.topContainer}>
@@ -170,7 +186,7 @@ export default function RankingScreen() {
                   <View style={styles.topCardContent}>
                     <Avatar.Image size={48} source={{ uri: getFullImageUrl(item?.foto_perfil) }} />
                     <Text style={styles.topNameText}>{item.nombre} {item.apellido}</Text>
-                    <Text style={styles.topProfessionText}>{item.profesion}</Text>
+                    <Text style={styles.topProfessionText}>{item.profesion_nombre}</Text>
                     <StarRating rating={item.rating} />
                   </View>
                 </>
@@ -210,7 +226,7 @@ export default function RankingScreen() {
                   <Avatar.Image size={40} source={{ uri: getFullImageUrl(item?.foto_perfil) }} />
                   <View style={styles.listTextBlock}>
                     <Text style={styles.listNameText}>{item.nombre} {item.apellido}</Text>
-                    <Text style={styles.listProfessionText}>{item.profesion}</Text>
+                    <Text style={styles.listProfessionText}>{item.profesion_nombre}</Text>
                   </View>
                   <StarRating rating={item.rating} />
                 </>

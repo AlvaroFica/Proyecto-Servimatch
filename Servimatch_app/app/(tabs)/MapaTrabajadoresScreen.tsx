@@ -39,7 +39,7 @@ interface Trabajador {
   id: number;
   nombre: string;
   apellido: string;
-  profesion: string;
+  profesion_nombre: string;
   latitud: number;
   longitud: number;
 }
@@ -68,6 +68,27 @@ export default function MapaTrabajadoresScreen() {
     flex: 1,
     marginTop: Platform.select({ ios: 150, android: 150 }),
     marginBottom: insets.bottom + 30, // 🔼 permite ver botones flotantes
+  };
+  const normalizarProfesion = (nombre: string): string => {
+    return nombre
+      .replace(/[^\w\s]/g, '') // elimina emojis
+      .toLowerCase()
+      .normalize('NFD')         // elimina acentos
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+      .replace(/\s+/g, '_');    // reemplaza espacios por _
+  };
+  const iconMap: { [key: string]: any } = {
+    albañil: require('../../assets/icons/Albañil.png'),
+    carpintero: require('../../assets/icons/Carpintero.png'),
+    cerrajero: require('../../assets/icons/Cerrajero.png'),
+    electricista: require('../../assets/icons/Electricista.png'),
+    gasfiter: require('../../assets/icons/Gasfiter.png'),
+    jardinero: require('../../assets/icons/Jardinero.png'),
+    pintor: require('../../assets/icons/Pintor.png'),
+    soldador: require('../../assets/icons/Soldador.png'),
+    tapicero: require('../../assets/icons/Tapicero.png'),
+    tecnico_computacional: require('../../assets/icons/Técnico computacional.png'),
   };
 
 
@@ -164,6 +185,8 @@ export default function MapaTrabajadoresScreen() {
   };
 
   const onMarkerPress = (t: Trabajador) => {
+  console.log('🧠 Trabajador seleccionado:', t);
+
     setCurrent(t);
     setModalVisible(true);
   };
@@ -261,28 +284,22 @@ export default function MapaTrabajadoresScreen() {
       >
         {trabajadores.map(t => {
           if (t.latitud == null || t.longitud == null) return null;
-          const distance = userLoc
-            ? calculateDistance(
-                userLoc.latitude,
-                userLoc.longitude,
-                Number(t.latitud),
-                Number(t.longitud)
-              ).toFixed(1)
-            : null;
+
+          const key = normalizarProfesion(t.profesion_nombre);
+          const defaultIcon = require('../../assets/images/worker.png');
+          const icono = iconMap[key] ?? defaultIcon;
+
           return (
             <Marker
               key={t.id}
               coordinate={{ latitude: Number(t.latitud), longitude: Number(t.longitud) }}
               onPress={() => onMarkerPress(t)}
-              pinColor={theme.colors.primary}
             >
-              <Image
-                source={require('../../assets/images/worker.png')}
-                style={styles.marker}
-              />
+              <Image source={icono} style={styles.marker} />
             </Marker>
           );
         })}
+
       </MapView>
 
       {/* Botones flotantes: Recentrar y cambiar tipo de mapa */}
@@ -312,7 +329,7 @@ export default function MapaTrabajadoresScreen() {
               title={current ? `${current.nombre} ${current.apellido}` : ''}
               subtitle={
                 current
-                  ? `${current.profesion}${
+                  ? `${current.profesion_nombre || 'Profesión desconocida'}${
                       userLoc && current
                         ? ` • ${calculateDistance(
                             userLoc.latitude,
@@ -324,6 +341,8 @@ export default function MapaTrabajadoresScreen() {
                     }`
                   : ''
               }
+
+
               titleStyle={{ color: theme.colors.primary, fontWeight: 'bold' }}
               subtitleStyle={{ color: theme.colors.onSurface }}
               left={props => (
