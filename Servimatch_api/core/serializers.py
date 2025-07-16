@@ -2,9 +2,10 @@ from rest_framework import serializers
 from .models import (
     Usuario, Cliente, Servicio, Profesion, Trabajador, ExperienciaProfesional,
     FotoTrabajador, Calificacion, Solicitud, Pago, Etiqueta,
-    EtiquetaCalificacion, PlanServicio, Reserva, PagoServicio, PagoSolicitud )
+    EtiquetaCalificacion, PlanServicio, Reserva, PagoServicio, PagoSolicitud, Feedback )
 from django.db.models import Avg 
 import json   
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 # 1) Serializer de Profesión
 class ProfesionSerializer(serializers.ModelSerializer):
@@ -20,13 +21,30 @@ class ExperienciaProfesionalSerializer(serializers.ModelSerializer):
         model = ExperienciaProfesional
         fields = ['profesion', 'anos_experiencia', 'descripcion_breve', 'idiomas']
 
+
 class FotoTrabajadorSerializer(serializers.ModelSerializer):
     imagen = serializers.ImageField(use_url=True)
 
     class Meta:
         model = FotoTrabajador
         fields = ['id', 'imagen', 'titulo']
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        
+        # Agregar campos personalizados al token
+        token['username'] = user.username
+        token['es_admin'] = user.es_admin  # este es el campo clave
+
+        return token
        
+class FeedbackSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Feedback
+        fields = '__all__'
+        read_only_fields = ['usuario', 'fecha_creacion', 'respondido', 'respuesta']
 
 class ServicioSerializer(serializers.ModelSerializer):
     class Meta:
@@ -148,6 +166,7 @@ class UsuarioSerializer(serializers.ModelSerializer):
     latitud     = serializers.FloatField(required=False)
     longitud    = serializers.FloatField(required=False)
     foto_perfil = serializers.ImageField(required=False)
+    es_admin = serializers.BooleanField(read_only=True)
     trabajador  = serializers.DictField(write_only=True, required=False)
     servicios = serializers.PrimaryKeyRelatedField(queryset=Servicio.objects.all(), many=True, write_only=True, required=False)
     disponibilidad = serializers.CharField(write_only=True, required=False)
@@ -160,7 +179,7 @@ class UsuarioSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'username', 'email', 'password',
             'es_trabajador', 'foto_perfil', 'biografia',
-            'nombre', 'apellido', 'telefono',
+            'nombre', 'apellido', 'telefono', 'es_admin',
             'rol', 'direccion', 'latitud', 'longitud',
             'trabajador', 'servicios', 'disponibilidad',
             'profesion_id', 'trabajador_profile', # 👈 Agregado aquí también

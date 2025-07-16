@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
+from django.conf import settings
 
 class Usuario(AbstractUser):
     ROL_CHOICES = [
@@ -12,7 +13,7 @@ class Usuario(AbstractUser):
     es_trabajador = models.BooleanField(default=False)
     foto_perfil   = models.ImageField(upload_to='perfiles/', null=True, blank=True)
     biografia     = models.TextField(blank=True)
-
+    es_admin = models.BooleanField(default=False)
     direccion = models.CharField(max_length=255, blank=True)
     latitud   = models.FloatField(null=True, blank=True)
     longitud  = models.FloatField(null=True, blank=True)
@@ -38,18 +39,29 @@ class Servicio(models.Model):
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField()
     profesion = models.ForeignKey(
-    'Profesion',
-    on_delete=models.CASCADE,
-    related_name='servicios',
-    null=True  # Temporalmente permitir null
-)
-
+        'Profesion',
+        on_delete=models.CASCADE,
+        related_name='servicios',
+        null=True  # Temporalmente permitir null
+    )
 
     def __str__(self):
-        return f"{self.nombre} ({self.profesion.nombre})"
+        return f"{self.nombre} ({self.profesion.nombre})" if self.profesion else self.nombre
 
 
-    
+class Feedback(models.Model):
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='feedbacks')
+    trabajador = models.ForeignKey('Trabajador', on_delete=models.SET_NULL, null=True, blank=True, related_name='reportes_recibidos')
+    mensaje = models.TextField()
+    respuesta = models.TextField(blank=True, null=True)
+    tipo = models.CharField(max_length=50, blank=True)  # Ej: "soporte", "problema", "reporte"
+    role = models.CharField(max_length=20, blank=True)  # "cliente" o "trabajador"
+    respondido = models.BooleanField(default=False)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'Feedback #{self.id} de {self.usuario.username}'
+
 class Profesion(models.Model):
     nombre      = models.CharField(max_length=100, unique=True)
     descripcion = models.TextField(blank=True)

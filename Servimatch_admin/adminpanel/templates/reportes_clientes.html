@@ -178,31 +178,30 @@
 
 {% block extra_js %}
 <script>
-const API_URL = "{{ API }}";
-
-  document.querySelector("#filtroRol")?.addEventListener("change", function () {
-    const rol = this.value;
-    const url = new URL(window.location.href);
-    if (rol) {
-      url.searchParams.set("rol", rol);
-    } else {
-      url.searchParams.delete("rol");
-    }
-    window.location.href = url.toString();
-  });
+const API_URL = "http://localhost:8000/api";  // Cambia si usas otra IP o puerto
 
 function send(id){
   const ta = document.getElementById(`resp_${id}`);
   const st = document.getElementById(`stat_${id}`);
   const txt = ta.value.trim();
-  if(!txt){st.textContent='vacío';return;}
+  if(!txt){
+    st.textContent='vacío';
+    return;
+  }
+
   fetch(`${API_URL}/feedback/${id}/respuesta/`, {
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({respuesta:txt})
+    body:JSON.stringify({respuesta: txt})
   })
-  .then(r => r.ok ? document.getElementById(`card_${id}`).remove() : Promise.reject())
-  .catch(_=>st.textContent='error');
+  .then(r => {
+    if (r.ok) {
+      document.getElementById(`card_${id}`).remove();
+    } else {
+      st.textContent = 'error al guardar';
+    }
+  })
+  .catch(_=>st.textContent='error conexión');
 }
 </script>
 {% endblock %}

@@ -29,7 +29,7 @@ export default function ConfirmarPagoSolicitudScreen() {
 
     setLoading(true);
     try {
-      const res = await fetch('http://192.168.100.9:8000/api/solicitudes/iniciar-pago/', {
+      const res = await fetch('http://192.168.1.58:8000/api/solicitudes/iniciar-pago/', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${tokens.access}`,
