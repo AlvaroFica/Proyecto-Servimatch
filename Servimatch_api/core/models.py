@@ -33,12 +33,21 @@ class Cliente(models.Model):
     def __str__(self):
         return self.usuario.username
 
+# core/models.py
+
 class Servicio(models.Model):
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField()
+    profesion = models.ForeignKey(
+        'Profesion',
+        on_delete=models.CASCADE,
+        related_name='servicios',
+        null=True  # Temporalmente permitir null
+    )
 
     def __str__(self):
-        return self.nombre
+        return f"{self.nombre} ({self.profesion.nombre})" if self.profesion else self.nombre
+
 
 class Feedback(models.Model):
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='feedbacks')
@@ -68,13 +77,8 @@ class Trabajador(models.Model):
     latitud = models.FloatField(null=True, blank=True)
     longitud = models.FloatField(null=True, blank=True)
     servicios = models.ManyToManyField('Servicio', related_name='trabajadores')
-    profesion     = models.ForeignKey(
-       'Profesion',
-       on_delete=models.PROTECT,
-       null=True,
-       blank=True,
-       related_name='trabajadores'
-   )
+    profesion = models.ForeignKey(Profesion, on_delete=models.SET_NULL, null=True, blank=True)
+
 
     def __str__(self):
         return self.usuario.username

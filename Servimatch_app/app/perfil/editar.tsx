@@ -15,6 +15,7 @@ import {
 } from 'react-native-paper';
 import BaseLayout from '../../components/BaseLayout';
 import { useAuth } from '../../context/AuthContext';
+import { Snackbar } from 'react-native-paper';
 
 export default function PerfilEditarScreen() {
   const { tokens } = useAuth();
@@ -46,6 +47,8 @@ export default function PerfilEditarScreen() {
   const [disponibilidadObj, setDisponibilidadObj] = useState<{ [key: string]: { inicio: string; fin: string }[] }>({
     lunes: [], martes: [], miércoles: [], jueves: [], viernes: [], sábado: [], domingo: [],
   });
+  const [showSnackbar, setShowSnackbar] = useState(false);
+
 
   const validarCampos = () => {
     const soloLetras = /^[A-Za-zÁÉÍÓÚÑáéíóúñ\s]+$/;
@@ -88,16 +91,15 @@ export default function PerfilEditarScreen() {
 
     (async () => {
       try {
-        const [perfilRes, serviciosRes] = await Promise.all([
-          fetch('http://192.168.1.58:8000/api/usuarios/me/', {
-            headers: { Authorization: `Bearer ${accessToken}` },
-          }),
-          fetch('http://192.168.1.58:8000/api/servicios/', {
-            headers: { Authorization: `Bearer ${accessToken}` },
-          }),
-        ]);
-
+        // 1. Obtener perfil
+        const perfilRes = await fetch('http://192.168.100.9:8000/api/usuarios/me/', {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
         const data = await perfilRes.json();
+
+        const profesionId = data.trabajador_profile?.profesion_id || null;
+
+        // 2. Cargar datos básicos
         setNombre(data.nombre || '');
         setApellido(data.apellido || '');
         setTelefono(data.telefono || '');
@@ -117,24 +119,95 @@ export default function PerfilEditarScreen() {
           console.warn('Disponibilidad malformateada');
         }
 
-        setServiciosSeleccionados(data.trabajador_profile?.servicios || []);
+        const serviciosIds = (data.trabajador_profile?.servicios || []).map((s: any) => s.id);
+        setServiciosSeleccionados(serviciosIds);
+
         if (data.foto_perfil) {
           setFotoUri(
             data.foto_perfil.startsWith('http')
               ? data.foto_perfil
-              : `http://192.168.1.58:8000${data.foto_perfil}`
+              : `http://192.168.100.9:8000${data.foto_perfil}`
           );
         }
 
-        const serviciosData = await serviciosRes.json();
-        setServicios(serviciosData);
-      } catch {
+        // ✅ 3. Obtener servicios solo si profesionId es válido
+        if (profesionId !== null && profesionId !== undefined) {
+          const serviciosRes = await fetch(`http://192.168.100.9:8000/api/servicios/?profesion_id=${profesionId}`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          });
+          const serviciosData = await serviciosRes.json();
+          setServicios(serviciosData);
+        }
+
+      } catch (e) {
+        console.error('Error al cargar perfil:', e);
         Alert.alert('Error', 'No se pudo cargar el perfil');
       } finally {
         setLoading(false);
       }
     })();
   }, [accessToken]);
+
+      (async () => {
+        try {
+          // 1. Obtener perfil
+          const perfilRes = await fetch('http://192.168.100.9:8000/api/usuarios/me/', {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          });
+          const data = await perfilRes.json();
+
+          const profesionId = data.trabajador_profile?.profesion_id || null;
+
+
+          // 2. Cargar datos básicos
+          setNombre(data.nombre || '');
+          setApellido(data.apellido || '');
+          setTelefono(data.telefono || '');
+          setBiografia(data.biografia || '');
+          setDireccion(data.direccion || '');
+
+          const disponibilidadData = data.trabajador_profile?.disponibilidad || '{}';
+          try {
+            const parsed = JSON.parse(disponibilidadData);
+            const disponibilidadCompleta = diasSemana.reduce((acc, dia) => {
+              const franjas = parsed[dia] || [];
+              acc[dia] = franjas.length ? franjas : [{ inicio: '', fin: '' }];
+              return acc;
+            }, {} as { [key: string]: { inicio: string; fin: string }[] });
+            setDisponibilidadObj(disponibilidadCompleta);
+          } catch {
+            console.warn('Disponibilidad malformateada');
+          }
+
+          const serviciosIds = (data.trabajador_profile?.servicios || []).map((s: any) => s.id);
+          setServiciosSeleccionados(serviciosIds);
+
+          if (data.foto_perfil) {
+            setFotoUri(
+              data.foto_perfil.startsWith('http')
+                ? data.foto_perfil
+                : `http://192.168.100.9:8000${data.foto_perfil}`
+            );
+          }
+
+          // ✅ 3. Obtener servicios solo si profesionId es válido
+          if (profesionId !== null && profesionId !== undefined) {
+            const serviciosRes = await fetch(`http://192.168.100.9:8000/api/servicios/?profesion_id=${profesionId}`, {
+              headers: { Authorization: `Bearer ${accessToken}` },
+            });
+            const serviciosData = await serviciosRes.json();
+            setServicios(serviciosData);
+          }
+
+        } catch (e) {
+          console.error('Error al cargar perfil:', e);
+          Alert.alert('Error', 'No se pudo cargar el perfil');
+        } finally {
+          setLoading(false);
+        }
+      })();
+    }, [accessToken]);
+
 
   useEffect(() => {
     if (!loading) {
@@ -225,8 +298,11 @@ export default function PerfilEditarScreen() {
         }
       );
       if (!res.ok) throw new Error(await res.text());
-      Alert.alert('Éxito', 'Perfil actualizado');
-      router.back();
+      setShowSnackbar(true);
+      setTimeout(() => {
+        router.back();
+      }, 3000);
+
     } catch (e) {
       console.error('Error al actualizar perfil:', e);
       Alert.alert('Error', 'No se pudo actualizar');
@@ -304,25 +380,75 @@ export default function PerfilEditarScreen() {
               </Surface>
             </TouchableOpacity>
             <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>Foto de perfil</Text>
+           <Button
+              mode="contained-tonal"
+              onPress={pickImage}
+              icon={fotoUri ? 'reload' : 'camera'}
+              style={{ marginTop: 8 }}
+            >
+              {fotoUri ? 'Cambiar foto' : 'Subir foto'}
+            </Button>
           </View>
 
           <Surface style={[styles.formSection, { backgroundColor: theme.colors.surface }]}>
-            <TextInput label="Nombre" value={nombre} onChangeText={setNombre} mode="outlined" error={nombreError} style={styles.input} />
+           <TextInput
+            label="Nombre"
+            value={nombre}
+            onChangeText={setNombre}
+            mode="outlined"
+            error={nombreError}
+            style={styles.input}
+            left={<TextInput.Icon icon="account" />}
+          />
             {nombreError && <Text style={{ color: 'red', marginBottom: 8 }}>Solo letras permitidas</Text>}
 
-            <TextInput label="Apellido" value={apellido} onChangeText={setApellido} mode="outlined" error={apellidoError} style={styles.input} />
+           <TextInput
+            label="Apellido"
+            value={apellido}
+            onChangeText={setApellido}
+            mode="outlined"
+            error={apellidoError}
+            style={styles.input}
+            left={<TextInput.Icon icon="account-outline" />}
+          />
             {apellidoError && <Text style={{ color: 'red', marginBottom: 8 }}>Solo letras permitidas</Text>}
 
-            <TextInput label="Teléfono" value={telefono} onChangeText={setTelefono} mode="outlined" error={telefonoError} style={styles.input} />
+            <TextInput
+              label="Teléfono"
+              value={telefono}
+              onChangeText={setTelefono}
+              mode="outlined"
+              error={telefonoError}
+              style={styles.input}
+              keyboardType="phone-pad"
+              left={<TextInput.Icon icon="phone" />}
+            />
             {telefonoError && <Text style={{ color: 'red', marginBottom: 8 }}>Formato chileno requerido (ej: 912345678)</Text>}
 
-            <TextInput label="Biografía" value={biografia} onChangeText={setBiografia} mode="outlined" multiline style={[styles.input, { height: 80 }]} error={biografiaError} />
+            <TextInput
+              label="Biografía"
+              value={biografia}
+              onChangeText={setBiografia}
+              mode="outlined"
+              multiline
+              style={[styles.input, { height: 80 }]}
+              error={biografiaError}
+              left={<TextInput.Icon icon="text" />}
+            />
             <Text style={{ alignSelf: 'flex-end', marginBottom: biografiaError ? 4 : 16, color: biografia.length >= 50 ? 'green' : 'red' }}>
               {biografia.trim().length}/50 caracteres requeridos
             </Text>
             {biografiaError && <Text style={{ color: 'red', marginBottom: 8 }}>Mínimo 50 caracteres</Text>}
 
-            <TextInput label="Dirección" value={direccion} onChangeText={setDireccion} mode="outlined" style={styles.input} />
+            <TextInput
+              label="Dirección"
+              value={direccion}
+              onChangeText={setDireccion}
+              mode="outlined"
+              style={styles.input}
+              left={<TextInput.Icon icon="map-marker" />}
+            />
+
 
             <Text style={styles.sectionTitle}>Disponibilidad semanal</Text>
             <View style={styles.tablaContainer}>
@@ -387,9 +513,18 @@ export default function PerfilEditarScreen() {
             <Text style={styles.sectionTitle}>Servicios ofrecidos</Text>
             <View style={styles.chipContainer}>
               {servicios.map((servicio: any) => (
-                <Chip key={servicio.id} selected={serviciosSeleccionados.includes(servicio.id)} onPress={() => toggleServicio(servicio.id)} style={styles.chip}>
-                  {servicio.nombre}
+                <Chip
+                  key={servicio.id}
+                  selected={serviciosSeleccionados.includes(servicio.id)}
+                  onPress={() => toggleServicio(servicio.id)}
+                  style={styles.chip}
+                  textStyle={{ fontSize: 14 }}
+                >
+                  <Text>
+                    {servicio.nombre.replace(/^[^a-zA-Z0-9]+/, '')} {/* Quita emoji del inicio */}
+                  </Text>
                 </Chip>
+
               ))}
             </View>
 
@@ -402,6 +537,16 @@ export default function PerfilEditarScreen() {
             </Button>
           </Surface>
         </Animated.View>
+        <Snackbar
+          visible={showSnackbar}
+          onDismiss={() => setShowSnackbar(false)}
+          duration={3000}
+          style={{ backgroundColor: theme.colors.primary }}
+          action={{ label: 'OK', onPress: () => setShowSnackbar(false) }}
+        >
+          🎉 Perfil actualizado con éxito
+        </Snackbar>
+
       </ScrollView>
     </BaseLayout>
   );
@@ -411,7 +556,16 @@ const styles = StyleSheet.create({
   content: { padding: 16, paddingBottom: 32 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   avatarSection: { alignItems: 'center', marginBottom: 24 },
-  avatarContainer: { borderRadius: 60, overflow: 'hidden', elevation: 4 },
+  avatarContainer: {
+  borderRadius: 60,
+  overflow: 'hidden',
+  elevation: 4,
+  padding: 8,
+  alignItems: 'center',
+  justifyContent: 'center',
+  backgroundColor: '#f0f0f0',
+},
+
   sectionTitle: { marginTop: 16, fontSize: 16, fontWeight: '600' },
   formSection: { padding: 16, borderRadius: 12, elevation: 2 },
   input: { marginBottom: 16 },

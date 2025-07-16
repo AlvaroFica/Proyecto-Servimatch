@@ -19,10 +19,13 @@ from .views import (
     listar_pagos_usuario,
     IniciarPagoSolicitudFlowView,
     confirmar_pago_solicitud_flow,
+    mis_planes,
     FeedbackViewSet,
-    login_admin_view, dashboard_admin_view,
-    CustomTokenObtainPairView, 
+    login_admin_view,
+    dashboard_admin_view,
+    CustomTokenObtainPairView,
 )
+
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -63,17 +66,13 @@ urlpatterns = [
     path('pagos/', listar_pagos_usuario),
     path('flow/iniciar-pago-solicitud/', IniciarPagoSolicitudFlowView.as_view()),
     path('flow/confirmacion-solicitud/', confirmar_pago_solicitud_flow),
+    path('planes/mis/', mis_planes, name='mis-planes'),
+
     path('', include(router.urls)),
-    path('token/', views.CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
     path('graficos/feedback-tipo/', views.FeedbackTipoGrafico.as_view()),
     path('graficos/boletas-por-estado/', views.BoletasEstadoGrafico.as_view()),
     path('graficos/servicios-populares/', views.ServiciosPopularesGrafico.as_view()),
-    
 ]
-
-
-
-
-

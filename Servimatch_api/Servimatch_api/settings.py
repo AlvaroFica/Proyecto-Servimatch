@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'core',
     'corsheaders',
     'django_filters',
+    'servicios',
 ]
 
 MIDDLEWARE = [

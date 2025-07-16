@@ -2,6 +2,8 @@ import { Picker } from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
+import { Snackbar } from 'react-native-paper';
+
 import {
   Alert,
   Keyboard,
@@ -21,11 +23,14 @@ import {
   Text,
   TextInput,
   Title,
-  useTheme
+  useTheme,
 } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BaseLayout from '../../components/BaseLayout';
 import { useAuth } from '../../context/AuthContext';
+function minProgress(val: number) {
+  return val;
+}
 
 const API_BASE_URL = 'http://192.168.1.58:8000';
 
@@ -104,6 +109,7 @@ export default function CompletarPerfilScreen() {
   const [anosError, setAnosError] = useState('');
   const [descBreveError, setDescBreveError] = useState('');
   const [idiomasError, setIdiomasError] = useState('');
+  const [showSnackbar, setShowSnackbar] = useState(false);
 
 
 
@@ -181,8 +187,11 @@ export default function CompletarPerfilScreen() {
         body: form,
       });
       if (!res.ok) throw new Error(await res.text());
-      Alert.alert('Éxito', 'Perfil guardado');
-      router.replace('/(tabs)');
+      setShowSnackbar(true);
+      setTimeout(() => {
+        router.replace('/(tabs)');
+      }, 4000); // Espera 2 segundos para que el Snackbar se vea
+
     } catch (e: any) {
       console.error(e);
       Alert.alert('Error', e.message);
@@ -260,6 +269,36 @@ export default function CompletarPerfilScreen() {
       setCurrentStep(3);
     }
   };
+const completados4 =
+  (profesionId ? 1 : 0) +
+  (anosExperiencia ? 1 : 0) +
+  (descBreve ? 1 : 0) +
+  (idiomas ? 1 : 0);
+  <View style={{ marginTop: 12 }}>
+  <View style={{ height: 8, backgroundColor: '#eee', borderRadius: 4 }}>
+    <View
+      style={{
+        height: 8,
+        backgroundColor: theme.colors.primary,
+        width: `${Math.floor(minProgress(rol ? 1 : 0) * 100)}%`,
+
+        borderRadius: 4,
+      }}
+    />
+  </View>
+  <Text
+    style={{
+      fontSize: 14,
+              fontWeight: '500',
+      color: '#444',
+      marginTop: 4,
+      textAlign: 'right',
+    }}
+  >
+    {`${completados4} de 4 campos`}
+  </Text>
+</View>
+
 
   return (
     <BaseLayout title="Completar perfil" back>
@@ -269,8 +308,7 @@ export default function CompletarPerfilScreen() {
         keyboardVerticalOffset={insets.top + 44}
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <ScrollView
-            contentContainerStyle={[styles.container, { paddingBottom: insets.bottom + 16 }]}
+          <ScrollView contentContainerStyle={{ paddingHorizontal: 12 }}
             keyboardShouldPersistTaps="handled"
           >
             {loading && <ActivityIndicator size="large" color={theme.colors.primary} />}
@@ -284,116 +322,154 @@ export default function CompletarPerfilScreen() {
                 </View>
 
                 {currentStep === 1 && (
-                  <>
+                 <>
                     <Title style={styles.sectionTitle}>Datos personales</Title>
                     <Surface style={[styles.card, { elevation: 2 }]}>
-
-                      <View style={styles.section}>
+                      <View style={{ alignItems: 'center', marginBottom: 16 }}>
                         {fotoUri ? (
-                          <Avatar.Image size={80} source={{ uri: fotoUri }} />
+                          <Avatar.Image size={100} source={{ uri: fotoUri }} />
                         ) : (
-                          <Avatar.Icon size={80} icon="account" />
+                          <Avatar.Icon size={100} icon="account" />
                         )}
                         <Button
-                          mode="text"
+                          mode="contained-tonal"
                           onPress={pickImage}
-                          style={styles.imageBtn}
-                          contentStyle={{ flexDirection: 'row-reverse' }}
+                          style={{ marginTop: 8 }}
                           icon={fotoUri ? 'reload' : 'camera'}
                         >
                           {fotoUri ? 'Cambiar foto' : 'Seleccionar foto'}
                         </Button>
                       </View>
 
-                        <TextInput
-                          label="Nombre"
-                          placeholder="Ingresa tu nombre"
-                          value={nombre}
-                          onChangeText={(t) => {
-                            setNombre(t);
-                            setNombreError(validarNombre(t));
-                          }}
-                          mode="outlined"
-                          style={styles.input}
-                        />
-                        {nombreError !== '' && <Text style={{ color: 'red', marginBottom: 8 }}>{nombreError}</Text>}
+                      <TextInput
+                        label="Nombre"
+                        placeholder="Ingresa tu nombre"
+                        value={nombre}
+                        onChangeText={(t) => {
+                          setNombre(t);
+                          setNombreError(validarNombre(t));
+                        }}
+                        mode="outlined"
+                        error={!!nombreError}
+                        style={styles.input}
+                        left={<TextInput.Icon icon="account" />}
+                      />
+                      {nombreError !== '' && <Text style={styles.errorText}>{nombreError}</Text>}
 
-                        <TextInput
-                          label="Apellido"
-                          placeholder="Ingresa tu apellido"
-                          value={apellido}
-                          onChangeText={(t) => {
-                            setApellido(t);
-                            setApellidoError(validarApellido(t));
-                          }}
-                          mode="outlined"
-                          style={styles.input}
-                        />
-                        {apellidoError !== '' && <Text style={{ color: 'red', marginBottom: 8 }}>{apellidoError}</Text>}
+                      <TextInput
+                        label="Apellido"
+                        placeholder="Ingresa tu apellido"
+                        value={apellido}
+                        onChangeText={(t) => {
+                          setApellido(t);
+                          setApellidoError(validarApellido(t));
+                        }}
+                        mode="outlined"
+                        error={!!apellidoError}
+                        style={styles.input}
+                        left={<TextInput.Icon icon="account-outline" />}
+                      />
+                      {apellidoError !== '' && <Text style={styles.errorText}>{apellidoError}</Text>}
 
-                        <TextInput
-                          label="Teléfono"
-                          placeholder="Ej: +56912345678"
-                          value={telefono}
-                          onChangeText={(t) => {
-                            setTelefono(t);
-                            setTelefonoError(validarTelefono(t));
-                          }}
-                          keyboardType="phone-pad"
-                          mode="outlined"
-                          style={styles.input}
-                        />
-                        {telefonoError !== '' && <Text style={{ color: 'red', marginBottom: 8 }}>{telefonoError}</Text>}
-                        <TextInput
-                          label="Descripción"
-                          placeholder="Cuéntanos sobre ti"
-                          value={descripcion}
-                          onChangeText={(t) => {
-                            setDescripcion(t);
-                            setDescError(validarDescripcion(t));
-                          }}
-                          onContentSizeChange={(e) => {
-                            setDescripcionHeight(Math.max(80, e.nativeEvent.contentSize.height));
-                          }}
-                          mode="outlined"
-                          multiline
-                          style={[styles.input, { height: descripcionHeight }]}
-                        />
+                      <TextInput
+                        label="Teléfono"
+                        placeholder="Ej: +56912345678"
+                        value={telefono}
+                        onChangeText={(t) => {
+                          setTelefono(t);
+                          setTelefonoError(validarTelefono(t));
+                        }}
+                        keyboardType="phone-pad"
+                        mode="outlined"
+                        error={!!telefonoError}
+                        style={styles.input}
+                        left={<TextInput.Icon icon="phone" />}
+                      />
+                      {telefonoError !== '' && <Text style={styles.errorText}>{telefonoError}</Text>}
+
+                      <TextInput
+                        label="Descripción"
+                        placeholder="Cuéntanos sobre ti"
+                        value={descripcion}
+                        onChangeText={(t) => {
+                          setDescripcion(t);
+                          setDescError(validarDescripcion(t));
+                        }}
+                        onContentSizeChange={(e) =>
+                          setDescripcionHeight(Math.max(80, e.nativeEvent.contentSize.height))
+                        }
+                        mode="outlined"
+                        multiline
+                        style={[styles.input, { height: descripcionHeight }]}
+                        error={!!descError}
+                        left={<TextInput.Icon icon="text" />}
+                      />
+                      <Text
+                        style={{
+                          marginBottom: 8,
+                          color: descripcion.length < 50 ? 'red' : 'green',
+                          fontSize: 13,
+                          fontStyle: 'italic',
+                          textAlign: 'right',
+                        }}
+                      >
+                        {descripcion.length < 50
+                          ? `Faltan ${50 - descripcion.length} caracteres.`
+                          : '¡Buena descripción! ✔️'}
+                      </Text>
+
+                      <View style={{ marginTop: 8 }}>
+                        <View style={{ height: 8, backgroundColor: '#eee', borderRadius: 4 }}>
+                          <View
+                            style={{
+                              height: 8,
+                              backgroundColor: theme.colors.primary,
+                              width: `${minProgress(
+                                [nombre, apellido, telefono, descripcion].filter(Boolean).length / 4
+                              ) * 100}%`,
+                              borderRadius: 4,
+                            }}
+                          />
+                        </View>
                         <Text
                           style={{
-                            marginBottom: 8,
-                            color: descripcion.length < 50 ? 'red' : 'green',
-                            fontSize: 13,
-                            fontStyle: 'italic',
+                            fontSize: 14,
+                            fontWeight: '500',
+                            color: '#444',
+                            marginTop: 4,
+                            textAlign: 'right',
                           }}
                         >
-                          {descripcion.length < 50
-                            ? `Faltan ${50 - descripcion.length} caracteres para el mínimo.`
-                            : '¡Buena descripción! ✔️'}
+                          {
+                            `${[nombre, apellido, telefono, descripcion].filter(Boolean).length} de 4 campos`
+                          }
                         </Text>
-
+                      </View>
                     </Surface>
-
                   </>
+
                 )}
 
                 {currentStep === 2 && (
                   <>
                     <Title style={styles.sectionTitle}>Dirección</Title>
                     <Surface style={[styles.card, { elevation: 2 }]}>
-                      <Picker
-                        selectedValue={comuna}
-                        onValueChange={(c) => {
-                          setComuna(c);
-                          setAddress('');
-                          setSuggestions([]);
-                          setLocation(null);
-                        }}
-                      >
-                        {COMUNAS.map((c) => (
-                          <Picker.Item key={c} label={c} value={c} />
-                        ))}
-                      </Picker>
+                      <Title style={styles.subTitle}>Comuna</Title>
+                      <Surface style={[styles.surfaceInline, { elevation: 1 }]}>
+                        <Picker
+                          selectedValue={comuna}
+                          onValueChange={(c) => {
+                            setComuna(c);
+                            setAddress('');
+                            setSuggestions([]);
+                            setLocation(null);
+                          }}
+                        >
+                          {COMUNAS.map((c) => (
+                            <Picker.Item key={c} label={c} value={c} />
+                          ))}
+                        </Picker>
+                      </Surface>
 
                       <TextInput
                         label="Dirección"
@@ -405,53 +481,133 @@ export default function CompletarPerfilScreen() {
                         }}
                         mode="outlined"
                         style={styles.input}
+                        left={<TextInput.Icon icon="map-marker" />}
                       />
-                      {suggestions.map((item) => (
-                        <Button
-                          key={item.place_id}
-                          mode="text"
-                          onPress={() => {
-                            setAddress(item.display_name);
-                            setLocation({
-                              latitude: parseFloat(item.lat),
-                              longitude: parseFloat(item.lon),
-                            });
-                            setSuggestions([]);
-                          }}
-                          compact
-                        >
-                          {item.display_name}
-                        </Button>
-                      ))}
-                    </Surface>
-                  </>
-                )}
 
-                {currentStep === 3 && (
-                  <>
-                    <Title style={styles.sectionTitle}>Rol</Title>
-                    <Surface style={[styles.card, { elevation: 2, paddingVertical: 12 }]}>
-                      <View style={styles.chipContainer}>
-                        {['cliente', 'trabajador', 'ambos'].map((r) => (
-                          <Chip
-                            key={r}
-                            mode="outlined"
-                            selected={rol === r}
-                            onPress={() => setRol(r as any)}
-                            style={styles.chip}
-                            selectedColor={theme.colors.primary}
-                          >
-                            {r.charAt(0).toUpperCase() + r.slice(1)}
-                          </Chip>
-                        ))}
+                      {suggestions.length > 0 && (
+                        <View
+                          style={{
+                            backgroundColor: '#f9f9f9',
+                            borderRadius: 8,
+                            borderWidth: 1,
+                            borderColor: '#ddd',
+                            marginBottom: 12,
+                            marginTop: -8,
+                          }}
+                        >
+                          {suggestions.map((item) => (
+                            <Button
+                              key={item.place_id}
+                              mode="text"
+                              onPress={() => {
+                                setAddress(item.display_name);
+                                setLocation({
+                                  latitude: parseFloat(item.lat),
+                                  longitude: parseFloat(item.lon),
+                                });
+                                setSuggestions([]);
+                              }}
+                              compact
+                              contentStyle={{ justifyContent: 'flex-start' }}
+                              style={{ paddingHorizontal: 8 }}
+                              icon="map-marker-outline"
+                            >
+                              {item.display_name}
+                            </Button>
+                          ))}
+                        </View>
+                      )}
+
+                      <View style={{ marginTop: 8 }}>
+                        <View style={{ height: 8, backgroundColor: '#eee', borderRadius: 4 }}>
+                          <View
+                            style={{
+                              height: 8,
+                              backgroundColor: theme.colors.primary,
+                              width: `${minProgress(address ? 1 : 0) * 100}%`,
+                              borderRadius: 4,
+                            }}
+                          />
+                        </View>
+                        <Text
+                          style={{
+                            fontSize: 14,
+                            fontWeight: '500',
+                            color: '#444',
+                            marginTop: 4,
+                            textAlign: 'right',
+                          }}
+                        >
+                          {address ? '1 de 1 campo' : '0 de 1 campo'}
+                        </Text>
                       </View>
                     </Surface>
                   </>
                 )}
+
+
+                {currentStep === 3 && (
+                  <>
+                    <Title style={styles.sectionTitle}>Rol</Title>
+                    <Surface style={[styles.card, { elevation: 2 }]}>
+                      <Text style={{ fontSize: 16, marginBottom: 8, textAlign: 'center', color: '#555' }}>
+                        Selecciona cómo usarás la aplicación
+                      </Text>
+                      <View style={styles.chipContainer}>
+                        {[
+                          { label: 'Cliente', value: 'cliente', icon: 'account' },
+                          { label: 'Trabajador', value: 'trabajador', icon: 'hammer' },
+                          { label: 'Ambos', value: 'ambos', icon: 'account-switch' },
+                        ].map((r) => (
+                          <Chip
+                            key={r.value}
+                            mode="outlined"
+                            selected={rol === r.value}
+                            onPress={() => setRol(r.value as any)}
+                            style={[styles.chip, { paddingHorizontal: 8 }]}
+                            selectedColor={theme.colors.primary}
+                            icon={r.icon}
+                          >
+                            {r.label}
+                          </Chip>
+                        ))}
+                      </View>
+
+                      <View style={{ marginTop: 12 }}>
+                        <View style={{ height: 8, backgroundColor: '#eee', borderRadius: 4 }}>
+                          <View
+                            style={{
+                              height: 8,
+                              backgroundColor: theme.colors.primary,
+                              width: `${minProgress(rol ? 1 : 0) * 100}%`,
+                              borderRadius: 4,
+                            }}
+                          />
+                        </View>
+                        <Text
+                          style={{
+                            fontSize: 14,
+                            fontWeight: '500',
+                            color: '#444',
+                            marginTop: 4,
+                            textAlign: 'right',
+                          }}
+                        >
+                          {rol ? '1 de 1 campo' : '0 de 1 campo'}
+                        </Text>
+                      </View>
+                    </Surface>
+                  </>
+                )}
+
                 {currentStep === 4 && rol !== 'cliente' && (
                   <>
                     <Title style={styles.sectionTitle}>Profesión & Experiencia</Title>
                     <Surface style={[styles.card, { elevation: 2 }]}>
+                      <Text style={{ fontSize: 16, marginBottom: 8, color: '#555' }}>
+                        Completa tu perfil profesional para mostrar tus habilidades
+                      </Text>
+
                       <Title style={styles.subTitle}>Profesión</Title>
                       <Surface style={[styles.surfaceInline, { elevation: 1 }]}>
                         <Picker
@@ -467,12 +623,12 @@ export default function CompletarPerfilScreen() {
                         </Picker>
                       </Surface>
                       {profesionError !== '' && (
-                        <Text style={{ color: 'red', marginBottom: 8 }}>{profesionError}</Text>
+                        <Text style={styles.errorText}>{profesionError}</Text>
                       )}
 
-                      <Title style={styles.subTitle}>Experiencia</Title>
+                      <Title style={styles.subTitle}>Años de experiencia</Title>
                       <TextInput
-                        label="Años de experiencia"
+                        label="Años"
                         placeholder="Ej: 5"
                         value={anosExperiencia}
                         onChangeText={(t) => {
@@ -487,24 +643,28 @@ export default function CompletarPerfilScreen() {
                         keyboardType="numeric"
                         mode="outlined"
                         style={styles.input}
+                        error={!!anosError}
+                        left={<TextInput.Icon icon="briefcase-outline" />}
                       />
                       {anosError !== '' && (
-                        <Text style={{ color: 'red', marginBottom: 8 }}>{anosError}</Text>
+                        <Text style={styles.errorText}>{anosError}</Text>
                       )}
+
+                      <Title style={styles.subTitle}>Breve descripción</Title>
                       <TextInput
-                        label="Breve descripción"
-                        placeholder="Describe tu experiencia breve"
+                        label="Descripción breve"
+                        placeholder="Describe tu experiencia"
                         value={descBreve}
                         onChangeText={(t) => {
                           setDescBreve(t);
                           const length = t.trim().length;
-                          setDescBreveError(length < 30 ? `Faltan ${30 - length} caracteres para el mínimo.` : '');
-                        }}
-                        onContentSizeChange={(e) => {
+                          setDescBreveError(length < 30 ? `Faltan ${30 - length} caracteres.` : '');
                         }}
                         mode="outlined"
                         multiline
                         style={[styles.input, { height: 80 }]}
+                        error={!!descBreveError}
+                        left={<TextInput.Icon icon="note-text" />}
                       />
                       <Text
                         style={{
@@ -512,13 +672,18 @@ export default function CompletarPerfilScreen() {
                           color: descBreve.trim().length < 50 ? 'red' : 'green',
                           fontSize: 13,
                           fontStyle: 'italic',
+                          textAlign: 'right',
                         }}
                       >
                         {descBreve.trim().length < 50
-                          ? `Faltan ${50 - descBreve.trim().length} caracteres para el mínimo.`
+                          ? `Faltan ${50 - descBreve.trim().length} caracteres.`
                           : '¡Buena descripción! ✔️'}
                       </Text>
+                      {descBreveError !== '' && (
+                        <Text style={styles.errorText}>{descBreveError}</Text>
+                      )}
 
+                      <Title style={styles.subTitle}>Idiomas (opcional)</Title>
                       <TextInput
                         label="Idiomas"
                         placeholder="Ej: Español, Inglés"
@@ -526,10 +691,48 @@ export default function CompletarPerfilScreen() {
                         onChangeText={setIdiomas}
                         mode="outlined"
                         style={styles.input}
+                        left={<TextInput.Icon icon="translate" />}
                       />
+
+                      <View style={{ marginTop: 8 }}>
+                        <View style={{ height: 8, backgroundColor: '#eee', borderRadius: 4 }}>
+                          <View
+                            style={{
+                              height: 8,
+                              backgroundColor: theme.colors.primary,
+                              width: `${minProgress(
+                                (profesionId ? 1 : 0) +
+                                  (anosExperiencia ? 1 : 0) +
+                                  (descBreve ? 1 : 0) +
+                                  (idiomas ? 1 : 0)
+                              ) * 25}%`,
+                              borderRadius: 4,
+                            }}
+                          />
+                        </View>
+                        <Text
+                          style={{
+                            fontSize: 14,
+                            fontWeight: '500',
+                            color: '#444',
+                            marginTop: 4,
+                            textAlign: 'right',
+                          }}
+                        >
+                          {
+                            `${[
+                              profesionId,
+                              anosExperiencia,
+                              descBreve,
+                              idiomas,
+                            ].filter(Boolean).length} de 4 campos`
+                          }
+                        </Text>
+                      </View>
                     </Surface>
                   </>
                 )}
+
                 <View style={styles.buttonRow}>
                   {currentStep > 1 && (
                     <Button
@@ -555,7 +758,20 @@ export default function CompletarPerfilScreen() {
                   >
                     {currentStep === totalSteps ? 'Guardar Perfil' : 'Siguiente'}
                   </Button>
+                <View style={{ marginBottom: 24 }} />
                 </View>
+                <Snackbar
+                  visible={showSnackbar}
+                  onDismiss={() => setShowSnackbar(false)}
+                  duration={3000}
+                  action={{
+                    label: 'OK',
+                    onPress: () => setShowSnackbar(false),
+                  }}
+                  style={{ backgroundColor: theme.colors.primary }}
+                >
+                  🎉 Perfil guardado con éxito.
+                </Snackbar>
               </>
             )}
           </ScrollView>
@@ -604,9 +820,10 @@ const styles = StyleSheet.create({
   chipContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginVertical: 8,
     justifyContent: 'center',
+    marginVertical: 12,
   },
+
   chip: {
     margin: 4,
   },
@@ -632,4 +849,13 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     color: '#555',
   },
+  errorText: {
+  color: 'red',
+  fontSize: 13,
+  marginTop: -4,
+  marginBottom: 8,
+}
+
+
+
 });
