@@ -48,6 +48,31 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 
+from collections import Counter
+class FeedbackTipoGrafico(APIView):
+    def get(self, request):
+        tipos = Feedback.objects.values_list('tipo', flat=True)
+        conteo = Counter(tipos)
+        labels = ['Positivo', 'Neutral', 'Negativo']
+        cantidades = [conteo.get(label, 0) for label in labels]
+        return Response({'labels': labels, 'cantidades': cantidades})
+
+
+class BoletasEstadoGrafico(APIView):
+    def get(self, request):
+        estados = Pago.objects.values_list('liberado', flat=True)
+        conteo = Counter(estados)
+        labels = ['Liberado', 'Pendiente']
+        cantidades = [conteo.get(True, 0), conteo.get(False, 0)]
+        return Response({'labels': labels, 'cantidades': cantidades})
+
+
+class ServiciosPopularesGrafico(APIView):
+    def get(self, request):
+        servicios = Reserva.objects.values_list('plan__nombre', flat=True)
+        conteo = Counter(servicios)
+        return Response({'labels': list(conteo.keys()), 'cantidades': list(conteo.values())})
+
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 

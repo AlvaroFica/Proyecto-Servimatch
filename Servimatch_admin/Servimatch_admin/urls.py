@@ -23,4 +23,15 @@ urlpatterns = [
     path('admin/login/', views.login_admin_view, name='login_admin'),
     path('admin/logout/', views.logout_admin_view, name='logout_admin'),
     path('dashboard-admin/notificaciones_dashboard/', views.notificaciones_dashboard, name='notificaciones_dashboard'),
+    # Vista HTML que muestra los gráficos
+    path('dashboard-admin/feedback-tipo/', views.feedback_tipo_view, name='feedback_tipo'),
+
+    # Endpoint JSON que da los datos al gráfico
+    path('api/graficos/feedback-tipo/', views.grafico_feedback_tipo, name='grafico_feedback_tipo'),
+
+    # Los otros dos endpoints también deben ir como API:
+    path('api/graficos/boletas-por-estado/', views.grafico_boletas_por_estado),
+    path('api/graficos/servicios-populares/', views.grafico_servicios_populares),
+
+
 ]

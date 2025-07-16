@@ -19,7 +19,7 @@ import { Avatar, IconButton, Text, useTheme } from 'react-native-paper';
 import { useAuth } from '../../context/AuthContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const API_BASE_URL = 'http://192.168.1.51:8000';
+const API_BASE_URL = 'http://192.168.1.58:8000';
 
 export default function ChatScreen() {
   const { id } = useLocalSearchParams();

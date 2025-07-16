@@ -44,7 +44,7 @@ interface Trabajador {
   longitud: number;
 }
 
-const API = 'http://192.168.1.51:8000';
+const API = 'http://192.168.1.58:8000';
 
 export default function MapaTrabajadoresScreen() {
   const { tokens } = useAuth();
@@ -335,26 +335,40 @@ export default function MapaTrabajadoresScreen() {
                 />
               )}
             />
-            <Card.Actions style={styles.modalActions}>
-              <Button
-                mode="outlined"
-                onPress={() => {
-                  setModalVisible(false);
-                  router.push(`/perfil/${current?.id}`);
-                }}
-                style={[styles.modalButton, { borderColor: theme.colors.primary }]}
-                labelStyle={{ color: theme.colors.primary }}
-              >
-                Ver perfil
-              </Button>
-              <Button
-                mode="text"
-                onPress={() => setModalVisible(false)}
-                labelStyle={{ color: theme.colors.onSurface }}
-              >
-                Cerrar
-              </Button>
-            </Card.Actions>
+              <Card.Actions style={styles.modalActions}>
+                <Button
+                  mode="outlined"
+                  onPress={() => {
+                    setModalVisible(false);
+                    router.push(`/perfil/${current?.id}`);
+                  }}
+                  style={[styles.modalButton, { borderColor: theme.colors.primary }]}
+                  labelStyle={{ color: theme.colors.primary }}
+                >
+                  Ver perfil
+                </Button>
+                <Button
+                  mode="outlined"
+                  onPress={() => {
+                    if (current?.id) {
+                      setModalVisible(false);
+                      router.push({ pathname: '/reportar/[id]', params: { id: String(current.id) } });
+                    }
+                  }}
+                  style={[styles.modalButton, { borderColor: theme.colors.error }]}
+                  labelStyle={{ color: theme.colors.error }}
+                >
+                  Reportar
+                </Button>
+                <Button
+                  mode="text"
+                  onPress={() => setModalVisible(false)}
+                  labelStyle={{ color: theme.colors.onSurface }}
+                >
+                  Cerrar
+                </Button>
+              </Card.Actions>
+
           </Card>
         </Modal>
       </Portal>

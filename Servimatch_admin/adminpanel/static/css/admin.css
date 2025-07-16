@@ -176,3 +176,75 @@ main {
   background-color: #fff;
   color: var(--primary);
 }
+
+.graf-btn {
+  background-color: #4A90E2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  text-align: left;
+}
+
+.graf-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  padding: 2rem;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.graf-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+
+.graf-btn:hover {
+  background-color: #357bd8;
+}
+
+.graf-btn.active {
+  background-color: #1e5bbd;
+}
+
+.graf-canvas {
+  display: none;
+  width: 100% !important;
+  height: auto !important;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.graf-canvas.show {
+  display: block;
+  opacity: 1;
+}
+
+.graf-btn.active {
+  background-color: #1e5bbd;
+}
+
+.dashboard-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  padding: 2rem;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.graf-card {
+  flex-grow: 1;
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  width: 600px;
+  max-width: 100%;
+}

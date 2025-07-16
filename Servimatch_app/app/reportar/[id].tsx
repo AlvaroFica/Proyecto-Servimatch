@@ -4,10 +4,10 @@ import {
   ScrollView,
   StyleSheet,
   View,
+  Dimensions
 } from 'react-native';
 import {
   Avatar,
-  Appbar,
   Button,
   Card,
   Paragraph,
@@ -19,7 +19,7 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 
-const API = 'http://192.168.1.58:8000'; // IP backend
+const API = 'http://192.168.1.58:8000'; // Ajusta si es necesario
 
 interface TrabajadorPerfil {
   id: number;
@@ -106,67 +106,70 @@ export default function PerfilReporteScreen() {
       : `${API}${perfil.foto_perfil}`
     : 'https://via.placeholder.com/100';
 
+  if (loading) {
+    return (
+      <View style={styles.centered}>
+        <Text>Cargando...</Text>
+      </View>
+    );
+  }
+
+  if (!perfil) {
+    return (
+      <View style={styles.centered}>
+        <Text>No se encontró el perfil.</Text>
+      </View>
+    );
+  }
+
   return (
-    <>
-      {/* Barra superior */}
-      <Appbar.Header elevated style={{ backgroundColor: theme.colors.primary }}>
-        <Appbar.BackAction onPress={() => router.back()} color="#fff" />
-        <Appbar.Content title="Reportar trabajador" titleStyle={{ color: "#fff" }} />
-      </Appbar.Header>
-
-      {/* Contenido */}
-      <ScrollView contentContainerStyle={styles.container}>
-        {loading || !perfil ? (
-          <View style={styles.centered}>
-            <Text>{loading ? 'Cargando...' : 'No se encontró el perfil.'}</Text>
+    <ScrollView contentContainerStyle={styles.container}>
+      <Card style={styles.card} elevation={3}>
+        <View style={[styles.header, { backgroundColor: theme.colors.primaryContainer }]}>
+          <Avatar.Image size={90} source={{ uri: fotoUri }} style={styles.avatar} />
+          <View style={styles.info}>
+            <Title style={{ color: theme.colors.onPrimaryContainer }}>
+              {perfil.nombre} {perfil.apellido}
+            </Title>
+            <Text style={[styles.profession, { color: theme.colors.onPrimaryContainer }]}>
+              {perfil.profesion}
+            </Text>
           </View>
-        ) : (
-          <Card style={styles.card} elevation={4}>
-            <View style={[styles.header, { backgroundColor: theme.colors.primaryContainer }]}>
-              <Avatar.Image size={90} source={{ uri: fotoUri }} style={styles.avatar} />
-              <View style={styles.info}>
-                <Title style={{ color: theme.colors.onPrimaryContainer }}>
-                  {perfil.nombre} {perfil.apellido}
-                </Title>
-                <Text style={[styles.profession, { color: theme.colors.onPrimaryContainer }]}>
-                  {perfil.profesion}
-                </Text>
-              </View>
+        </View>
+
+        <Card.Content>
+          {perfil.biografia && (
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: theme.colors.primary }]}>Acerca de mí</Text>
+              <Paragraph>{perfil.biografia}</Paragraph>
             </View>
+          )}
 
-            <Card.Content>
-              {perfil.biografia && (
-                <View style={styles.section}>
-                  <Text style={[styles.sectionTitle, { color: theme.colors.primary }]}>Acerca de mí</Text>
-                  <Paragraph>{perfil.biografia}</Paragraph>
-                </View>
-              )}
-
-              <View style={styles.section}>
-                <Text style={[styles.sectionTitle, { color: theme.colors.primary }]}>Escribe tu reporte</Text>
-                <TextInput
-                  label="Mensaje"
-                  value={mensaje}
-                  onChangeText={setMensaje}
-                  multiline
-                  numberOfLines={5}
-                  mode="outlined"
-                  style={{ marginBottom: 16 }}
-                />
-                <Button
-                  mode="contained"
-                  onPress={handleEnviar}
-                  loading={enviando}
-                  disabled={enviando}
-                >
-                  Enviar reporte
-                </Button>
-              </View>
-            </Card.Content>
-          </Card>
-        )}
-      </ScrollView>
-    </>
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: theme.colors.primary }]}>
+              Enviar reporte
+            </Text>
+            <TextInput
+              label="Mensaje"
+              value={mensaje}
+              onChangeText={setMensaje}
+              multiline
+              numberOfLines={5}
+              mode="outlined"
+              style={{ marginBottom: 16 }}
+            />
+            <Button
+              mode="contained"
+              onPress={handleEnviar}
+              loading={enviando}
+              disabled={enviando}
+            >
+              Enviar
+            </Button>
+          </View>
+        </Card.Content>
+      </Card>
+    </ScrollView>
   );
 }
 

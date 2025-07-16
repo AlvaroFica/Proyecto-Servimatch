@@ -28,7 +28,7 @@ interface Solicitud {
   longitud: number;
 }
 
-const API = 'http://192.168.1.51:8000';
+const API = 'http://192.168.1.58:8000';
 
 export default function MapaSolicitudesScreen() {
   const { tokens } = useAuth();

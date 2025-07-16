@@ -66,6 +66,10 @@ urlpatterns = [
     path('', include(router.urls)),
     path('token/', views.CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+
+    path('graficos/feedback-tipo/', views.FeedbackTipoGrafico.as_view()),
+    path('graficos/boletas-por-estado/', views.BoletasEstadoGrafico.as_view()),
+    path('graficos/servicios-populares/', views.ServiciosPopularesGrafico.as_view()),
     
 ]
 

@@ -8,6 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <!-- Sidebar -->
@@ -21,9 +22,10 @@
     <div class="dock-icon" onclick="abrirVentana('/admin/pagos/', 'Pagos')" data-label="Pagos">
       <img src="{% static 'icons/boleta_icon.png' %}">
     </div>
-    <div class="dock-icon" onclick="abrirVentana('/dashboard-admin/feedback-tipo/', 'Gráficos')" data-label="Gráficos">
+    <a href="/dashboard-admin/feedback-tipo/" class="dock-icon" data-label="Gráficos">
       <img src="{% static 'icons/graficos_icon.png' %}">
-    </div>
+    </a>
+
     <div class="dock-icon" onclick="abrirVentana('/dashboard-admin/notificaciones_dashboard/', 'Notificaciones')" data-label="Notificaciones">
       <img src="{% static 'icons/notificaciones_icon.png' %}">
       <span id="noti-count">0</span>

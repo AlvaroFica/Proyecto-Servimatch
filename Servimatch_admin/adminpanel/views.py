@@ -10,8 +10,16 @@ from django.contrib import messages
 
 API_BASE_URL = 'http://localhost:8000/api'
 
+
+def estadisticas_globales(request):
+    return render(request, 'adminpanel/estadisticas.html')
+
 def usuarios_admin(request):
     return render(request, 'usuarios_admin.html')
+
+def feedback_tipo_view(request):
+    return render(request, 'feedback_tipo.html')
+
 
 @csrf_exempt
 def responder_feedback(request, feedback_id):
@@ -51,6 +59,37 @@ def pagos_pendientes_view(request):
 
 API_TOKEN_URL = 'http://localhost:8000/api/token/'
 API_ME_URL = 'http://localhost:8000/api/usuarios/me/'
+
+from django.http import JsonResponse
+from collections import Counter
+
+def grafico_feedback_tipo(request):
+    url = f'{API_BASE_URL}/graficos/feedback-tipo/'
+    r = requests.get(url)
+
+    if r.status_code == 200:
+        return JsonResponse(r.json())
+    else:
+        return JsonResponse({'labels': [], 'cantidades': []})
+
+def grafico_boletas_por_estado(request):
+    url = f'{API_BASE_URL}/graficos/boletas-por-estado/'
+    r = requests.get(url)
+
+    if r.status_code == 200:
+        return JsonResponse(r.json())
+    else:
+        return JsonResponse({'labels': [], 'cantidades': []})
+
+def grafico_servicios_populares(request):
+    url = f'{API_BASE_URL}/graficos/servicios-populares/'
+    r = requests.get(url)
+
+    if r.status_code == 200:
+        return JsonResponse(r.json())
+    else:
+        return JsonResponse({'labels': [], 'cantidades': []})
+
 
 def login_admin_view(request):
     if request.method == 'POST':

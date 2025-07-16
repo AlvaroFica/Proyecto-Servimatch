@@ -42,9 +42,10 @@ class Servicio(models.Model):
 
 class Feedback(models.Model):
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='feedbacks')
+    trabajador = models.ForeignKey('Trabajador', on_delete=models.SET_NULL, null=True, blank=True, related_name='reportes_recibidos')
     mensaje = models.TextField()
     respuesta = models.TextField(blank=True, null=True)
-    tipo = models.CharField(max_length=50, blank=True)  # Ej: "soporte", "problema", etc.
+    tipo = models.CharField(max_length=50, blank=True)  # Ej: "soporte", "problema", "reporte"
     role = models.CharField(max_length=20, blank=True)  # "cliente" o "trabajador"
     respondido = models.BooleanField(default=False)
     fecha_creacion = models.DateTimeField(auto_now_add=True)

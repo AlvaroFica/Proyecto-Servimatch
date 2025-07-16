@@ -1,70 +1,105 @@
 {% extends 'base_admin.html' %}
 {% block title %}Estadísticas{% endblock %}
 {% block page_title %}Estadísticas Globales{% endblock %}
+
 {% block content %}
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 2rem; max-width: 1400px; margin: 2rem auto;">
-
-  <div style="background: #fff; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
-    <h3 style="margin-bottom: 1rem; color: #4b3c91;">Feedback por Tipo</h3>
-    <canvas id="grafFeedback"></canvas>
+<div class="dashboard-container">
+  <div class="graf-menu">
+    <button data-grafico="grafFeedback" class="graf-btn active">📊 Feedback</button>
+    <button data-grafico="grafBoletas" class="graf-btn">📄 Boletas</button>
+    <button data-grafico="grafServicios" class="graf-btn">🛠 Servicios</button>
   </div>
 
-  <div style="background: #fff; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
-    <h3 style="margin-bottom: 1rem; color: #4b3c91;">Estado de Boletas</h3>
-    <canvas id="grafBoletas"></canvas>
+  <div class="graf-card">
+    <canvas id="grafFeedback" class="graf-canvas show"></canvas>
+    <canvas id="grafBoletas" class="graf-canvas"></canvas>
+    <canvas id="grafServicios" class="graf-canvas"></canvas>
   </div>
-
-  <div style="background: #fff; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
-    <h3 style="margin-bottom: 1rem; color: #4b3c91;">Servicios Populares</h3>
-    <canvas id="grafServicios"></canvas>
-  </div>
-
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
 <script>
-function renderChart(id, type, url, label, bgList = []) {
-  fetch(url).then(r => r.json()).then(data => {
-    new Chart(document.getElementById(id), {
-      type: type,
-      data: {
-        labels: data.labels,
-        datasets: [{
-          label: label,
-          data: data.cantidades,
-          backgroundColor: bgList.length ? bgList : 'rgba(75, 60, 145, 0.7)',
-          borderRadius: type === 'bar' ? 10 : 0
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { display: true, position: 'bottom' },
-          title: {
-            display: true,
-            text: label,
-            color: '#333',
-            font: { size: 18 }
-          }
-        },
-        scales: type === 'bar' ? {
-          y: {
-            beginAtZero: true,
-            ticks: { stepSize: 1, color: '#555' },
-            grid: { color: '#eee' }
-          },
-          x: {
-            ticks: { color: '#555', maxRotation: 0, minRotation: 0 },
-            grid: { display: false }
-          }
-        } : {}
+  function main() {
+    const API_BASE_URL = 'http://localhost:8000/api';
+
+    const config = {
+      grafFeedback: ['bar', `${API_BASE_URL}/graficos/feedback-tipo/`, 'Feedback por Tipo', ['#6c63ff', '#ffce56', '#ff6384']],
+      grafBoletas: ['doughnut', `${API_BASE_URL}/graficos/boletas-por-estado/`, 'Boletas por Estado'],
+      grafServicios: ['bar', `${API_BASE_URL}/graficos/servicios-populares/`, 'Servicios Populares']
+    };
+
+    let charts = {};
+
+    function mostrarYRenderizar(id) {
+      // Ocultar todos los canvas
+      document.querySelectorAll('.graf-canvas').forEach(c => {
+        c.style.display = 'none';
+        c.classList.remove('show');
+      });
+
+      // Mostrar el canvas seleccionado
+      const canvas = document.getElementById(id);
+      canvas.style.display = 'block';
+      setTimeout(() => canvas.classList.add('show'), 10);
+
+      // Si no se ha renderizado aún, hacerlo
+      if (!charts[id]) {
+        const [type, url, label, colors] = config[id];
+        fetch(url).then(r => r.json()).then(data => {
+          charts[id] = new Chart(canvas, {
+            type: type,
+            data: {
+              labels: data.labels,
+              datasets: [{
+                label: label,
+                data: data.cantidades,
+                backgroundColor: colors || 'rgba(75, 60, 145, 0.7)',
+                borderRadius: type === 'bar' ? 10 : 0
+              }]
+            },
+            options: {
+              indexAxis: 'y',
+              responsive: true,
+              plugins: {
+                legend: { display: true, position: 'bottom' },
+                title: { display: true, text: label }
+              },
+              scales: type === 'bar' ? {
+                y: { beginAtZero: true },
+                x: {}
+              } : {}
+            }
+          });
+        });
       }
+    }
+
+    // Eventos en botones
+    document.querySelectorAll('.graf-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-grafico');
+
+        // Activar botón
+        document.querySelectorAll('.graf-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Mostrar gráfico
+        mostrarYRenderizar(id);
+      });
     });
-  });
-}
 
-renderChart('grafFeedback', 'bar', '/graficos/feedback-tipo/', 'Cantidad');
-renderChart('grafBoletas', 'doughnut', '/graficos/boletas-por-estado/', 'Estado');
+    // Activar por defecto
+    document.querySelector('[data-grafico="grafFeedback"]').classList.add('active');
+    mostrarYRenderizar('grafFeedback');
+  }
 
-renderChart('grafServicios', 'bar', '/graficos/servicios-populares/', 'Servicios');
+  // Ejecutar cuando el DOM esté listo
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', main);
+  } else {
+    main();
+  }
 </script>
 {% endblock %}

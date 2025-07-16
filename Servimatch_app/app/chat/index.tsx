@@ -11,7 +11,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 
-const API_BASE_URL = 'http://192.168.1.51:8000';
+const API_BASE_URL = 'http://192.168.1.58:8000';
 
 function decodeJWT(token: string): any {
   try {
