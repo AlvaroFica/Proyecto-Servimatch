@@ -12,6 +12,7 @@ import {
   Text,
   TextInput,
   useTheme,
+  Snackbar,
 } from 'react-native-paper';
 import BaseLayout from '../../components/BaseLayout';
 import { useAuth } from '../../context/AuthContext';
@@ -39,6 +40,7 @@ export default function PerfilEditarScreen() {
   const [apellidoError, setApellidoError] = useState(false);
   const [telefonoError, setTelefonoError] = useState(false);
   const [biografiaError, setBiografiaError] = useState(false);
+  const [showSnackbar, setShowSnackbar] = useState(false);
 
   const diasSemana = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
   const horas = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00"];
@@ -83,21 +85,19 @@ export default function PerfilEditarScreen() {
 
     return valido;
   };
+
   useEffect(() => {
     if (!accessToken) return;
 
     (async () => {
       try {
-        const [perfilRes, serviciosRes] = await Promise.all([
-          fetch('http://192.168.1.58:8000/api/usuarios/me/', {
-            headers: { Authorization: `Bearer ${accessToken}` },
-          }),
-          fetch('http://192.168.1.58:8000/api/servicios/', {
-            headers: { Authorization: `Bearer ${accessToken}` },
-          }),
-        ]);
-
+        const perfilRes = await fetch('http://192.168.1.58:8000/api/usuarios/me/', {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
         const data = await perfilRes.json();
+
+        const profesionId = data.trabajador_profile?.profesion_id || null;
+
         setNombre(data.nombre || '');
         setApellido(data.apellido || '');
         setTelefono(data.telefono || '');
@@ -117,7 +117,9 @@ export default function PerfilEditarScreen() {
           console.warn('Disponibilidad malformateada');
         }
 
-        setServiciosSeleccionados(data.trabajador_profile?.servicios || []);
+        const serviciosIds = (data.trabajador_profile?.servicios || []).map((s: any) => s.id);
+        setServiciosSeleccionados(serviciosIds);
+
         if (data.foto_perfil) {
           setFotoUri(
             data.foto_perfil.startsWith('http')
@@ -126,9 +128,16 @@ export default function PerfilEditarScreen() {
           );
         }
 
-        const serviciosData = await serviciosRes.json();
-        setServicios(serviciosData);
-      } catch {
+        if (profesionId !== null && profesionId !== undefined) {
+          const serviciosRes = await fetch(`http://192.168.1.58:8000/api/servicios/?profesion_id=${profesionId}`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          });
+          const serviciosData = await serviciosRes.json();
+          setServicios(serviciosData);
+        }
+
+      } catch (e) {
+        console.error('Error al cargar perfil:', e);
         Alert.alert('Error', 'No se pudo cargar el perfil');
       } finally {
         setLoading(false);
