@@ -57,6 +57,7 @@ urlpatterns = [
     path('pagos/', listar_pagos_usuario),
     path('flow/iniciar-pago-solicitud/', IniciarPagoSolicitudFlowView.as_view()),
     path('flow/confirmacion-solicitud/', confirmar_pago_solicitud_flow),
+    path('simular-pago/', views.simular_pago_servicio, name='simular-pago'),
     path('planes/mis/', mis_planes, name='mis-planes'),
 
     path('', include(router.urls)),

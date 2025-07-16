@@ -24,7 +24,7 @@ import { useAuth } from '../context/AuthContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 
-const API = 'http://192.168.100.9:8000';
+const API = 'http://192.168.100.4:8000';
 
 export default function PlanesTrabajadorScreen() {
   const { tokens } = useAuth();

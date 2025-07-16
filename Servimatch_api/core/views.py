@@ -922,3 +922,31 @@ def mis_planes(request):
     planes = PlanServicio.objects.filter(trabajador=trabajador)
     serializer = PlanServicioSerializer(planes, many=True)
     return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def simular_pago_servicio(request):
+    try:
+        plan_id = request.data.get('plan_id')
+        monto = request.data.get('monto')
+
+        if not plan_id or not monto:
+            return Response({'error': 'Faltan datos'}, status=400)
+
+        plan = PlanServicio.objects.filter(id=plan_id).first()
+        if not plan:
+            return Response({'error': 'Plan no encontrado'}, status=404)
+
+        pago = PagoServicio.objects.create(
+            usuario=request.user,
+            plan=plan,
+            trabajador=plan.trabajador,
+            monto=monto,
+            estado="pagado"
+        )
+
+        return Response({'msg': 'Pago registrado correctamente'}, status=201)
+
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)

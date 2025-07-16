@@ -17,7 +17,7 @@ import { useAuth } from '../context/AuthContext';
 import { useRouter } from 'expo-router';
 import paperTheme from './theme';
 
-const API_BASE_URL = 'http://192.168.100.9:8000';
+const API_BASE_URL = 'http://192.168.100.4:8000';
 
 export default function AuthScreen() {
   return (

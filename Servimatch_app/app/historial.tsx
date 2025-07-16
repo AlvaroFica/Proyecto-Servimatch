@@ -17,7 +17,7 @@ export default function HistorialScreen() {
 
     const fetchPagos = async () => {
       try {
-        const res = await fetch('http://192.168.100.9:8000/api/pagos/', {
+        const res = await fetch('http://192.168.100.4:8000/api/pagos/', {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },

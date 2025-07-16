@@ -92,7 +92,7 @@ export default function PerfilEditarScreen() {
       (async () => {
         try {
           // 1. Obtener perfil
-          const perfilRes = await fetch('http://192.168.100.9:8000/api/usuarios/me/', {
+          const perfilRes = await fetch('http://192.168.100.4:8000/api/usuarios/me/', {
             headers: { Authorization: `Bearer ${accessToken}` },
           });
           const data = await perfilRes.json();
@@ -127,13 +127,13 @@ export default function PerfilEditarScreen() {
             setFotoUri(
               data.foto_perfil.startsWith('http')
                 ? data.foto_perfil
-                : `http://192.168.100.9:8000${data.foto_perfil}`
+                : `http://192.168.100.4:8000${data.foto_perfil}`
             );
           }
 
           // ✅ 3. Obtener servicios solo si profesionId es válido
           if (profesionId !== null && profesionId !== undefined) {
-            const serviciosRes = await fetch(`http://192.168.100.9:8000/api/servicios/?profesion_id=${profesionId}`, {
+            const serviciosRes = await fetch(`http://192.168.100.4:8000/api/servicios/?profesion_id=${profesionId}`, {
               headers: { Authorization: `Bearer ${accessToken}` },
             });
             const serviciosData = await serviciosRes.json();
@@ -232,7 +232,7 @@ export default function PerfilEditarScreen() {
     try {
 
       const res = await fetch(
-        'http://192.168.100.9:8000/api/usuarios/actualizar-perfil/',
+        'http://192.168.100.4:8000/api/usuarios/actualizar-perfil/',
         {
           method: 'PUT',
           headers: { Authorization: `Bearer ${accessToken}` },
@@ -280,7 +280,7 @@ export default function PerfilEditarScreen() {
     } as any);
 
     try {
-      const res = await fetch('http://192.168.100.9:8000/api/fotos-trabajador/', {
+      const res = await fetch('http://192.168.100.4:8000/api/fotos-trabajador/', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${accessToken}`,
