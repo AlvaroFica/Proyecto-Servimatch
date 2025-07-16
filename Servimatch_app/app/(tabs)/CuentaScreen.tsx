@@ -30,7 +30,7 @@ export default function CuentaScreen() {
     if (!accessToken) return;
     (async () => {
       try {
-        const res = await fetch('http://192.168.1.58:8000/api/usuarios/me/',
+        const res = await fetch('http://192.168.1.61:8000/api/usuarios/me/',
 
           { headers: { Authorization: `Bearer ${accessToken}` } }
         );
@@ -80,7 +80,7 @@ export default function CuentaScreen() {
   const avatarUri = user?.foto_perfil
     ? user.foto_perfil.startsWith('http')
       ? user.foto_perfil
-      : `http://192.168.1.58:8000${user.foto_perfil}`
+      : `http://192.168.1.61:8000${user.foto_perfil}`
     : null;
 
   return (

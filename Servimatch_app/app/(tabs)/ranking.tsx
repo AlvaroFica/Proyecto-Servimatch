@@ -20,7 +20,7 @@ const getFullImageUrl = (ruta: string | undefined): string => {
 };
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const API_BASE_URL = 'http://192.168.1.58:8000';
+const API_BASE_URL = 'http://192.168.1.61:8000';
 
 interface Profesion {
   id: number;

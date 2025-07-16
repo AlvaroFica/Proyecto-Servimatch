@@ -16,7 +16,7 @@ import BaseLayout from '../components/BaseLayout';
 import { useAuth } from '../context/AuthContext';
 
 
-const API_BASE_URL = 'http://192.168.1.58:8000';
+const API_BASE_URL = 'http://192.168.1.61:8000';
 
 
 export default function ConfirmarPagoScreen() {
