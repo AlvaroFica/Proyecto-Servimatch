@@ -495,18 +495,22 @@ class PagoServicioSerializer(serializers.ModelSerializer):
     plan = serializers.SerializerMethodField()
     trabajador = serializers.SerializerMethodField()
 
-    def get_plan(self, obj):
-        return {'nombre': obj.plan.nombre}
-
-    def get_trabajador(self, obj):
-        return {
-            'nombre': obj.trabajador.usuario.nombre,
-            'apellido': obj.trabajador.usuario.apellido,
-        }
-
     class Meta:
         model = PagoServicio
         fields = ['id', 'plan', 'trabajador', 'monto', 'estado', 'fecha']
+
+    def get_plan(self, obj):
+        return {
+            'nombre': obj.plan.nombre
+        } if obj.plan else None
+
+    def get_trabajador(self, obj):
+        if obj.trabajador and obj.trabajador.usuario:
+            return {
+                'nombre': obj.trabajador.usuario.nombre,
+                'apellido': obj.trabajador.usuario.apellido,
+            }
+        return None
 
 class PagoSolicitudSerializer(serializers.ModelSerializer):
     class Meta:
