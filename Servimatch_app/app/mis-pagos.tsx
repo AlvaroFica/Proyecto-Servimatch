@@ -7,11 +7,11 @@ import {
   Paragraph,
   Title,
   useTheme,
-  Surface,
   Text,
   Appbar,
 } from 'react-native-paper';
 import { useAuth } from '../context/AuthContext';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const API_URL = 'http://192.168.100.4:8000';
 
@@ -55,7 +55,6 @@ export default function MisPagosScreen() {
     fetchPagos();
   }, [tokens]);
 
-  // 🔢 Calculos útiles
   const totalGastado = pagos.reduce((acc, p) => acc + parseFloat(p.monto), 0);
   const ultimoPago = pagos.length > 0
     ? pagos.reduce((a, b) => (new Date(a.fecha) > new Date(b.fecha) ? a : b))
@@ -107,10 +106,14 @@ export default function MisPagosScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <Appbar.Header>
-        <Appbar.Content title="Mis pagos" />
-      </Appbar.Header>
+      {/* ✅ Header con SafeArea y color personalizado */}
+      <SafeAreaView edges={['top']} style={{ backgroundColor: theme.colors.primary }}>
+        <Appbar.Header style={{ backgroundColor: theme.colors.primary, elevation: 0 }}>
+          <Appbar.Content title="Mis pagos" titleStyle={{ color: 'white' }} />
+        </Appbar.Header>
+      </SafeAreaView>
 
+      {/* Encabezado informativo */}
       <View style={styles.headerContainer}>
         <Image source={require('../assets/images/wallet.png')} style={styles.headerIcon} />
         <Title style={styles.headerTitle}>Mis pagos realizados</Title>

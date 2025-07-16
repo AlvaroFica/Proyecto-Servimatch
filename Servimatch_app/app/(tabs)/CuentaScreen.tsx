@@ -170,9 +170,9 @@ export default function CuentaScreen() {
                 style={styles.listItem}
               />
               <List.Item
-                title="Historial"
+                title="Mis pagos"
                 left={props => <List.Icon {...props} icon="history" color={theme.colors.primary} />}
-                onPress={() => router.push('./historial')}
+                onPress={() => router.push('../../mis-pagos')}
                 style={styles.listItem}
               />
               {isTrabajador && (
